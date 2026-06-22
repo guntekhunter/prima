@@ -25,3 +25,12 @@ export const getStatus = async () => {
     console.log("Failed to fetch organisations", error);
   }
 };
+
+export const getLeads = async () => {
+  try {
+    const res = await axios.get("/api/get/leads");
+    return res.data;
+  } catch (error) {
+    console.log("Failed to fetch leads", error);
+  }
+};

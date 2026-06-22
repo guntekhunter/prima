@@ -48,7 +48,21 @@ export async function POST(req: Request) {
           user_id,
         },
       ])
-      .select()
+      .select(`
+  id,
+  name,
+  phone_number,
+  address,
+  nominal,
+
+  branch_id,
+  status_id,
+  platform_id,
+
+  branches(name),
+  status(name),
+  platform(name)
+`)
       .single();
 
     if (error) {
@@ -60,6 +74,43 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const supabase = createSupabaseAdmin();
+
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Lead ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase
+      .from("leads")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      deletedId: id,
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 }
     );
   }
 }
