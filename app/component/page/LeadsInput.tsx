@@ -114,6 +114,19 @@ export default function Dashboard() {
       });
 
       setLeads((prev) => [newLead, ...prev]);
+
+      const selectedStatus = statuses.find((s) => s.id === statusId);
+      if (selectedStatus?.name?.toLowerCase() === "closing") {
+        router.push(`/invoice?lead_id=${newLead.id}`);
+      } else {
+        setName("");
+        setPhoneNumber("");
+        setBranchId("");
+        setStatusId("");
+        setAddress("");
+        setNominal("");
+        setPlatformId("");
+      }
     } catch (error) {
       console.error(error);
       alert("Failed to add lead");

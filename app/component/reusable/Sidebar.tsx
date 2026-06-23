@@ -53,6 +53,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                     flex flex-col
                     relative
                     ${collapsed ? "w-16" : "w-64"}
+                    print:hidden
                 `}
             >
                 {/* Header */}
@@ -131,7 +132,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto p-6">
+            <main className="flex-1 overflow-y-auto p-6 print:p-0 print:overflow-visible print:bg-white">
                 {children}
             </main>
         </div>
