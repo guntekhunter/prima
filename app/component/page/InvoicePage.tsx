@@ -191,7 +191,7 @@ export default function InvoicePage() {
       const res = await axios.post("/api/invoices", payload);
       if (res.data) {
         setIsSaved(true);
-        setSuccessMessage("Invoice successfully saved to Supabase!");
+        setSuccessMessage("Invoice successfully saved to Database!");
         setTimeout(() => setSuccessMessage(""), 5000);
       }
     } catch (err: any) {
@@ -297,7 +297,7 @@ export default function InvoicePage() {
           {isSaved ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
               <CheckCircle size={12} />
-              Saved to Supabase
+              Saved to Database
             </span>
           ) : (
             <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200 animate-pulse">
@@ -496,7 +496,7 @@ export default function InvoicePage() {
         <div className="space-y-4 no-print actions-panel">
           <div className="bg-white border border-zinc-200 shadow-lg rounded-2xl p-5 space-y-4">
             <h3 className="font-bold text-sm text-zinc-950 tracking-tight">Invoice Actions</h3>
-            
+
             <button
               onClick={handleSave}
               disabled={saving}
@@ -520,7 +520,7 @@ export default function InvoicePage() {
             <p>1. Pre-populated fields derive from the Closing Lead details automatically.</p>
             <p>2. The invoice number is automatically generated and guaranteed unique.</p>
             <p>3. You can add extra product items or modify product names, codes, quantities, and pricing.</p>
-            <p>4. Clicking <strong>Save Invoice</strong> commits the record to Supabase.</p>
+            <p>4. Clicking <strong>Save Invoice</strong> commits the record to Database.</p>
             <p>5. Clicking <strong>Print / Save PDF</strong> opens the system print window. We've optimized the layout for printable paper sizes.</p>
           </div>
         </div>
