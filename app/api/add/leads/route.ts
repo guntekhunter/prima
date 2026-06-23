@@ -30,14 +30,52 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
+    // =========================
+    // Cari customer berdasarkan no_hp
+    // =========================
+    const { data: existingCustomer } = await supabase
+      .from("customer")
+      .select("id")
+      .eq("no_hp", phone_number)
+      .maybeSingle();
+
+    let customerId: string;
+
+    if (existingCustomer) {
+      customerId = existingCustomer.id;
+    } else {
+      const { data: newCustomer, error: customerError } = await supabase
+        .from("customer")
+        .insert({
+          no_hp: phone_number,
+          name,
+          address,
+        })
+        .select("id")
+        .single();
+
+      if (customerError) {
+        return NextResponse.json(
+          { error: customerError.message },
+          { status: 500 }
+        );
+      }
+
+      customerId = newCustomer.id;
+    }
+
+    // =========================
+    // Buat lead
+    // =========================
     const { data, error } = await supabase
       .from("leads")
       .insert([
         {
+          customer_id: customerId,
           name,
           phone_number,
           branch_id,
@@ -49,31 +87,34 @@ export async function POST(req: Request) {
         },
       ])
       .select(`
-  id,
-  name,
-  phone_number,
-  address,
-  nominal,
-
-  branch_id,
-  status_id,
-  platform_id,
-
-  branches(name),
-  status(name),
-  platform(name)
-`)
+        id,
+        customer_id,
+        name,
+        phone_number,
+        address,
+        nominal,
+        branch_id,
+        status_id,
+        platform_id,
+        branches(name),
+        status(name),
+        platform(name)
+      `)
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(data);
+
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

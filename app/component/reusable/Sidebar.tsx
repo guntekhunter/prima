@@ -18,13 +18,11 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
 
-    const isAuthPage = pathname === "/login" || pathname === "/register";
+    const isAuthPage = pathname === "/login";
 
     const menuItems = [
-        { name: "Dashboard", href: "/dashboard", icon: Home },
-        { name: "Profile", href: "/profile", icon: User },
-        { name: "CV", href: "/cv", icon: FileText },
-        { name: "Settings", href: "/settings", icon: Settings },
+        { name: "Input Leads", href: "/leads-input", icon: Home },
+        { name: "Tambah Pengguna", href: "/register", icon: User },
     ];
 
     const handleLogout = async () => {
@@ -93,10 +91,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                                     rounded-xl
                                     transition-all
                                     duration-200
-                                    ${
-                                        isActive
-                                            ? "bg-zinc-100 text-zinc-950 font-medium"
-                                            : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
+                                    ${isActive
+                                        ? "bg-zinc-100 text-zinc-950 font-medium"
+                                        : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
                                     }
                                     ${collapsed ? "justify-center" : ""}
                                 `}

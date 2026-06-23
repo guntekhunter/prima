@@ -34,3 +34,13 @@ export const getLeads = async () => {
     console.log("Failed to fetch leads", error);
   }
 };
+
+export const getRoles = async () => {
+  try {
+    const res = await axios.get("/api/get/roles");
+    return res;
+  } catch (error) {
+    console.log("Failed to fetch roles", error);
+  }
+};
+
