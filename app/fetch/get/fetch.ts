@@ -44,3 +44,23 @@ export const getRoles = async () => {
   }
 };
 
+export const getExpenseCategories = async () => {
+  try {
+    const res = await axios.get("/api/get/expense_categories");
+    return res;
+  } catch (error) {
+    console.log("Failed to fetch expense categories", error);
+  }
+};
+
+export const getExpenses = async () => {
+  try {
+    const res = await axios.get("/api/get/expenses");
+    return res.data;
+  } catch (error) {
+    console.log("Failed to fetch expenses", error);
+  }
+};
+
+
+

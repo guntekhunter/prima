@@ -10,6 +10,7 @@ import {
     FileText,
     Settings,
     LogOut,
+    BarChart3,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -22,6 +23,8 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
     const menuItems = [
         { name: "Input Leads", href: "/leads-input", icon: Home },
+        { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
+        { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
         { name: "Tambah Pengguna", href: "/register", icon: User },
     ];
 

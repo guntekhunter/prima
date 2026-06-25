@@ -14,6 +14,7 @@ export async function GET() {
             branch_id,
             status_id,
             platform_id,
+            created_at,
             branches(name),
             status(name),
             platform(name)

@@ -23,3 +23,12 @@ type Lead = {
   status?: { name: string } | null;
   platform?: { name: string } | null;
 };
+
+type CreateExpensePayload = {
+  category_id: string;
+  description: string;
+  amount: number;
+  branch_id: string;
+  created_by: string;
+};
+
