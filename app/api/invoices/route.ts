@@ -141,6 +141,24 @@ export async function POST(req: Request) {
       }
     }
 
+    // Update the lead's nominal value to the grand total of the invoice items
+    const grandTotal = items.reduce((sum: number, item: any) => {
+      const qty = Number(item.qty) || 0;
+      const prize = Number(item.prize) || 0;
+      return sum + (qty * prize);
+    }, 0);
+
+    const { error: leadUpdateError } = await supabase
+      .from("leads")
+      .update({ nominal: grandTotal })
+      .eq("id", lead_id);
+
+    if (leadUpdateError) {
+      console.error("Error updating lead nominal:", leadUpdateError);
+      return NextResponse.json({ error: leadUpdateError.message }, { status: 500 });
+    }
+
+
     // Retrieve full invoice for response
     const { data: fullInvoice, error: fetchError } = await supabase
       .from("invoices")

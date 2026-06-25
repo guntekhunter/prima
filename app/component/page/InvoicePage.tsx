@@ -191,6 +191,8 @@ export default function InvoicePage() {
       const res = await axios.post("/api/invoices", payload);
       if (res.data) {
         setIsSaved(true);
+        const grandTotal = calculateSubtotal();
+        setLead(prev => prev ? { ...prev, nominal: grandTotal } : null);
         setSuccessMessage("Invoice successfully saved to Database!");
         setTimeout(() => setSuccessMessage(""), 5000);
       }
