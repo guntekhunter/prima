@@ -22,7 +22,8 @@ export default function Login() {
             return;
         }
 
-        router.push("/dashboard");
+        router.refresh();
+        router.push("/report");
     }
 
     return (

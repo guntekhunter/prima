@@ -21,7 +21,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
 
-    const isAuthPage = pathname === "/login";
+    const AUTH_PAGES = ["/",];
+    const isAuthPage = AUTH_PAGES.some(
+        (p) => pathname === p || pathname.startsWith(p + "/")
+    );
 
     const menuItems = [
         { name: "Input Leads", href: "/leads-input", icon: Home },
@@ -35,7 +38,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         if (error) {
             alert(error.message);
         } else {
-            router.push("/login");
+            router.push("/");
         }
     };
 
