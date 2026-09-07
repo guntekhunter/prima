@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Printer, Save, CheckCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, FileDown, Save, CheckCircle } from "lucide-react";
 import { getBranch } from "@/app/fetch/get/fetch";
 import axios from "axios";
 
@@ -49,6 +49,9 @@ export default function InvoicePage() {
   const [saving, setSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [downloading, setDownloading] = useState(false);
+
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   const generateInvoiceNumber = (lId: string) => {
     const today = new Date();
@@ -204,8 +207,78 @@ export default function InvoicePage() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadPdf = async () => {
+    if (!invoiceRef.current) return;
+    setDownloading(true);
+    
+    // Allow React to re-render the UI (hiding scrollbars & selects) before capture
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    try {
+      // dom-to-image-more handles modern CSS color functions (oklch, lab)
+      // that html2canvas cannot parse (Tailwind v4 uses oklch by default)
+      const domtoimage = (await import("dom-to-image-more")).default;
+      const jsPDF = (await import("jspdf")).default;
+
+      const node = invoiceRef.current;
+      const scale = 2;
+      const imgData = await domtoimage.toPng(node, {
+        width: node.offsetWidth * scale,
+        height: node.offsetHeight * scale,
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: `${node.offsetWidth}px`,
+          height: `${node.offsetHeight}px`,
+        },
+      });
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+
+      // Convert node pixel size → mm (at 96 dpi)
+      const imgWpx = node.offsetWidth * scale;
+      const imgHpx = node.offsetHeight * scale;
+      const imgH = (imgHpx * pageW) / imgWpx;
+
+      // Split across pages if needed
+      const img = new Image();
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.src = imgData;
+      });
+
+      let yOffset = 0;
+      let remaining = imgH;
+
+      while (remaining > 0) {
+        const sliceH = Math.min(pageH, remaining);
+        const srcY = (yOffset / imgH) * imgHpx;
+        const srcH = (sliceH / imgH) * imgHpx;
+
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = imgWpx;
+        sliceCanvas.height = srcH;
+        const ctx = sliceCanvas.getContext("2d")!;
+        ctx.drawImage(img, 0, srcY, imgWpx, srcH, 0, 0, imgWpx, srcH);
+
+        const sliceData = sliceCanvas.toDataURL("image/png");
+        if (yOffset > 0) pdf.addPage();
+        pdf.addImage(sliceData, "PNG", 0, 0, pageW, sliceH);
+
+        yOffset += pageH;
+        remaining -= pageH;
+      }
+
+      pdf.save(`invoice-${invoiceNumber || "download"}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Failed to generate PDF.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loading) {
@@ -319,7 +392,7 @@ export default function InvoicePage() {
       {/* Main Grid: Left is Invoice Sheet, Right is Action Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Invoice Card Sheet */}
-        <div className="lg:col-span-3 bg-white border border-zinc-200 shadow-xl rounded-2xl p-8 invoice-card">
+        <div ref={invoiceRef} className="lg:col-span-3 bg-white border border-zinc-200 shadow-xl rounded-2xl p-8 invoice-card">
           {/* Top Invoice Branding */}
           <div className="flex flex-col md:flex-row justify-between gap-6 border-b border-zinc-150 pb-6 mb-6">
             <div>
@@ -365,7 +438,7 @@ export default function InvoicePage() {
           </div>
 
           {/* Invoice Items Table */}
-          <div className="overflow-x-auto mb-6">
+          <div className={downloading ? "mb-6 overflow-visible" : "overflow-x-auto mb-6"}>
             <table className="w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-zinc-300 text-zinc-400 uppercase font-semibold">
@@ -402,19 +475,25 @@ export default function InvoicePage() {
                       />
                     </td>
                     <td className="py-2.5 px-2">
-                      <select
-                        value={item.branch_id}
-                        onChange={(e) => updateItem(index, "branch_id", e.target.value)}
-                        className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
-                        required
-                      >
-                        <option value="">Select Branch</option>
-                        {branches.map((b) => (
-                          <option key={b.id} value={b.id}>
-                            {b.name}
-                          </option>
-                        ))}
-                      </select>
+                      {downloading ? (
+                        <div className="w-full border-b border-transparent py-1">
+                          {branches.find(b => b.id === item.branch_id)?.name || "-"}
+                        </div>
+                      ) : (
+                        <select
+                          value={item.branch_id}
+                          onChange={(e) => updateItem(index, "branch_id", e.target.value)}
+                          className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
+                          required
+                        >
+                          <option value="">Select Branch</option>
+                          {branches.map((b) => (
+                            <option key={b.id} value={b.id}>
+                              {b.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="py-2.5 px-2 text-center">
                       <input
@@ -509,11 +588,12 @@ export default function InvoicePage() {
             </button>
 
             <button
-              onClick={handlePrint}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
             >
-              <Printer size={14} />
-              Print / Save PDF
+              <FileDown size={14} />
+              {downloading ? "Generating PDF..." : "Download PDF"}
             </button>
           </div>
 
@@ -523,7 +603,7 @@ export default function InvoicePage() {
             <p>2. The invoice number is automatically generated and guaranteed unique.</p>
             <p>3. You can add extra product items or modify product names, codes, quantities, and pricing.</p>
             <p>4. Clicking <strong>Save Invoice</strong> commits the record to Database.</p>
-            <p>5. Clicking <strong>Print / Save PDF</strong> opens the system print window. We've optimized the layout for printable paper sizes.</p>
+            <p>5. Clicking <strong>Download PDF</strong> captures the invoice card and saves it as a paginated A4 PDF file directly to your device.</p>
           </div>
         </div>
       </div>
