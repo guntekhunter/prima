@@ -520,14 +520,23 @@ export default function Dashboard() {
                       </select>
                     </td>
 
-                    <td>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(lead.id)}
-                        className="text-red-600 hover:text-red-800 cursor-pointer"
-                      >
-                        Delete
-                      </button>
+                    <td className="p-0">
+                      <div className="flex items-center justify-center gap-1 h-8 px-1">
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/invoice?lead_id=${lead.id}`)}
+                          className="px-1.5 py-0.5 rounded text-[.6rem] font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 cursor-pointer whitespace-nowrap"
+                        >
+                          Invoice
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(lead.id)}
+                          className="px-1.5 py-0.5 rounded text-[.6rem] font-semibold bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 cursor-pointer whitespace-nowrap"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
