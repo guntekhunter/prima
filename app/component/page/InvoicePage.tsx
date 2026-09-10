@@ -616,6 +616,37 @@ export default function InvoicePage() {
                               </td>
                             </tr>
                           ))}
+                          <tr className="w-full">
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td className="py-2 px-3 text-right font-semibold">
+                              {(() => {
+                                const categoryTotal = categoryItems.reduce(
+                                  (sum, { item }) => sum + (item.total || 0),
+                                  0,
+                                );
+
+                                const percentage =
+                                  lead.nominal > 0
+                                    ? (categoryTotal / lead.nominal) * 100
+                                    : 0;
+
+                                return (
+                                  <div>
+                                    <div>
+                                      Rp {categoryTotal.toLocaleString("id-ID")}
+                                    </div>
+                                    <div className="text-xs text-zinc-500">
+                                      {percentage.toFixed(2)}%
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </td>
+                          </tr>
 
                           {/* Add Item Row for this category */}
                           <tr className="add-item-row no-print bg-zinc-50/30">
@@ -643,6 +674,7 @@ export default function InvoicePage() {
           <div>
             <div className="flex justify-between border-zinc-200 pt-2 font-bold text-sm">
               <span>Margin</span>
+              <span>{((margin / lead.nominal) * 100).toFixed(2)} %</span>
               <span>Rp {margin.toLocaleString("id-ID")}</span>
             </div>
           </div>

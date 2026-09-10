@@ -17,11 +17,13 @@ type Lead = {
   branch_id: string;
   status_id: string;
   platform_id: string;
+  created_at?: string;
 
   branches?: { name: string } | null;
   status?: { name: string } | null;
   platform?: { name: string } | null;
 };
+
 
 type CreateExpensePayload = {
   category_id: string;

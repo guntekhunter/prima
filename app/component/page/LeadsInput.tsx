@@ -48,6 +48,9 @@ export default function Dashboard() {
   const [platformId, setPlatformId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [filterBranch, setFilterBranch] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+
   useEffect(() => {
     async function init() {
       try {
@@ -194,15 +197,25 @@ export default function Dashboard() {
     );
   }
 
+  // Filtered Leads
+  const filteredLeads = leads.filter((l) => {
+    let match = true;
+    if (filterBranch && l.branch_id !== filterBranch) match = false;
+    if (filterMonth && l.created_at) {
+      if (!l.created_at.startsWith(filterMonth)) match = false;
+    }
+    return match;
+  });
+
   // Stats Calculations
-  const totalLeads = leads.length;
-  const closingLeads = leads.filter(
+  const totalLeads = filteredLeads.length;
+  const closingLeads = filteredLeads.filter(
     (l) => l.status?.name?.toLowerCase() === "closing",
   );
   const totalOmset = closingLeads.reduce((sum, l) => sum + (l.nominal || 0), 0);
   const averageNominal =
     totalLeads > 0
-      ? leads.reduce((sum, l) => sum + (l.nominal || 0), 0) / totalLeads
+      ? filteredLeads.reduce((sum, l) => sum + (l.nominal || 0), 0) / totalLeads
       : 0;
 
   return (
@@ -214,9 +227,27 @@ export default function Dashboard() {
             Project Costing
           </h1>
         </div>
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold shadow-sm">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Live Leads Tracker</span>
+        <div className="flex items-center gap-4">
+          <select
+            value={filterBranch}
+            onChange={(e) => setFilterBranch(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-zinc-200 text-sm font-medium bg-white text-zinc-700 outline-none focus:border-zinc-400"
+          >
+            <option value="">All Branches</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+          <input
+            type="month"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-zinc-200 text-sm font-medium bg-white text-zinc-700 outline-none focus:border-zinc-400"
+          />
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold shadow-sm">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Live Leads Tracker</span>
+          </div>
         </div>
       </div>
 
@@ -400,7 +431,7 @@ export default function Dashboard() {
                 </tr>
 
                 {/* Leads Rows */}
-                {leads.map((lead) => (
+                {filteredLeads.map((lead) => (
                   <tr
                     key={lead.id}
                     className="divide-x divide-zinc-300 border-t border-zinc-300 bg-white hover:bg-zinc-50"
