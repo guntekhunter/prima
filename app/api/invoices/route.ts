@@ -13,6 +13,7 @@ export async function GET(req: Request) {
       costumer_id,
       lead_id,
       invoice_number,
+      total_prize,
       created_at,
       invoice_items (
         id,
@@ -23,7 +24,8 @@ export async function GET(req: Request) {
         qty,
         branch_id,
         prize,
-        total
+        total,
+        invoice_category_id
       )
     `);
 
@@ -130,6 +132,7 @@ export async function POST(req: Request) {
         branch_id: item.branch_id || null,
         prize: Number(item.prize) || 0,
         total: Number(item.total) || (Number(item.qty) || 0) * (Number(item.prize) || 0),
+        invoice_category_id: item.category_id || null,
       }));
 
       const { error: itemsError } = await supabase
@@ -158,6 +161,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: leadUpdateError.message }, { status: 500 });
     }
 
+    // Also keep invoices.total_prize in sync with the grand total
+    const { error: invoiceTotalError } = await supabase
+      .from("invoices")
+      .update({ total_prize: grandTotal })
+      .eq("id", invoiceId);
+
+    if (invoiceTotalError) {
+      console.error("Error updating invoice total_prize:", invoiceTotalError);
+    }
 
     // Retrieve full invoice for response
     const { data: fullInvoice, error: fetchError } = await supabase
@@ -167,6 +179,7 @@ export async function POST(req: Request) {
         costumer_id,
         lead_id,
         invoice_number,
+        total_prize,
         created_at,
         invoice_items (
           id,
@@ -177,7 +190,8 @@ export async function POST(req: Request) {
           qty,
           branch_id,
           prize,
-          total
+          total,
+          invoice_category_id
         )
       `)
       .eq("id", invoiceId)

@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { getBranch, getLeads, getPlatform, getStatus } from "@/app/fetch/get/fetch";
+import {
+  getBranch,
+  getLeads,
+  getPlatform,
+  getStatus,
+} from "@/app/fetch/get/fetch";
 import { createLead } from "@/app/fetch/add/fetch";
 import { deleteLead } from "@/app/fetch/delete/fetch";
 import { updateLead } from "@/app/fetch/update/fetch";
@@ -91,7 +96,6 @@ export default function Dashboard() {
       !name ||
       !phoneNumber ||
       !branchId ||
-      !statusId ||
       !address ||
       nominal === "" ||
       !platformId
@@ -107,7 +111,6 @@ export default function Dashboard() {
         name,
         phone_number: phoneNumber,
         branch_id: branchId,
-        status_id: statusId,
         address,
         nominal: Number(nominal),
         platform_id: platformId,
@@ -151,11 +154,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleUpdate = async (
-    id: number,
-    field: keyof Lead,
-    value: any
-  ) => {
+  const handleUpdate = async (id: number, field: keyof Lead, value: any) => {
     const previous = leads;
 
     // optimistic update
@@ -163,11 +162,11 @@ export default function Dashboard() {
       prev.map((lead) =>
         lead.id === id
           ? {
-            ...lead,
-            [field]: value,
-          }
-          : lead
-      )
+              ...lead,
+              [field]: value,
+            }
+          : lead,
+      ),
     );
 
     try {
@@ -177,9 +176,7 @@ export default function Dashboard() {
 
       // sync with server response (IMPORTANT)
       setLeads((prev) =>
-        prev.map((lead) =>
-          lead.id === id ? { ...lead, ...updated } : lead
-        )
+        prev.map((lead) => (lead.id === id ? { ...lead, ...updated } : lead)),
       );
     } catch (e) {
       setLeads(previous);
@@ -199,7 +196,9 @@ export default function Dashboard() {
 
   // Stats Calculations
   const totalLeads = leads.length;
-  const closingLeads = leads.filter((l) => l.status?.name?.toLowerCase() === "closing");
+  const closingLeads = leads.filter(
+    (l) => l.status?.name?.toLowerCase() === "closing",
+  );
   const totalOmset = closingLeads.reduce((sum, l) => sum + (l.nominal || 0), 0);
   const averageNominal =
     totalLeads > 0
@@ -212,11 +211,8 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-5">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950">
-            Pendaftaran Leads
+            Project Costing
           </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            Kelola, pantau, dan daftarkan leads baru secara langsung dengan tampilan tabel interaktif.
-          </p>
         </div>
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold shadow-sm">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -228,8 +224,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white border border-zinc-200 shadow-sm rounded-2xl p-6 flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Total Leads</span>
-            <h3 className="text-2xl font-black text-zinc-950 tracking-tight">{totalLeads}</h3>
+            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+              Total Project
+            </span>
+            <h3 className="text-2xl font-black text-zinc-950 tracking-tight">
+              {totalLeads}
+            </h3>
           </div>
           <div className="h-10 w-10 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-zinc-500">
             <Users size={18} />
@@ -238,7 +238,9 @@ export default function Dashboard() {
 
         <div className="bg-white border border-zinc-200 shadow-sm rounded-2xl p-6 flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Omset (Closing)</span>
+            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+              Omset
+            </span>
             <h3 className="text-2xl font-black text-zinc-950 tracking-tight">
               Rp {totalOmset.toLocaleString("id-ID")}
             </h3>
@@ -250,7 +252,9 @@ export default function Dashboard() {
 
         <div className="bg-white border border-zinc-200 shadow-sm rounded-2xl p-6 flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Rata-rata Nominal</span>
+            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+              Rata-rata Nominal
+            </span>
             <h3 className="text-2xl font-black text-zinc-950 tracking-tight">
               Rp {Math.round(averageNominal).toLocaleString("id-ID")}
             </h3>
@@ -292,9 +296,7 @@ export default function Dashboard() {
                   <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[14%]">
                     Branch
                   </th>
-                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[14%]">
-                    Status
-                  </th>
+
                   <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[14%]">
                     Address
                   </th>
@@ -348,21 +350,6 @@ export default function Dashboard() {
                   </td>
 
                   <td className="p-0">
-                    <select
-                      value={statusId}
-                      onChange={(e) => setStatusId(e.target.value)}
-                      className="w-full h-8 px-2"
-                    >
-                      <option value="">Select Status</option>
-                      {statuses.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-
-                  <td className="p-0">
                     <input
                       type="text"
                       value={address}
@@ -377,7 +364,9 @@ export default function Dashboard() {
                       type="number"
                       value={nominal}
                       onChange={(e) =>
-                        setNominal(e.target.value === "" ? "" : Number(e.target.value))
+                        setNominal(
+                          e.target.value === "" ? "" : Number(e.target.value),
+                        )
                       }
                       placeholder="Nominal"
                       className="w-full h-8 px-2 outline-none"
@@ -440,22 +429,28 @@ export default function Dashboard() {
                         className="w-full h-full px-2 py-1 bg-transparent outline-none"
                         onChange={async (e) => {
                           const newBranchId = e.target.value;
-                          const selectedBranch = branches.find((b) => b.id === newBranchId);
+                          const selectedBranch = branches.find(
+                            (b) => b.id === newBranchId,
+                          );
 
                           setLeads((prev) =>
                             prev.map((l) =>
                               l.id === lead.id
                                 ? {
-                                  ...l,
-                                  branch_id: newBranchId,
-                                  branches: { name: selectedBranch?.name || "" },
-                                }
-                                : l
-                            )
+                                    ...l,
+                                    branch_id: newBranchId,
+                                    branches: {
+                                      name: selectedBranch?.name || "",
+                                    },
+                                  }
+                                : l,
+                            ),
                           );
 
                           try {
-                            await updateLead(lead.id, { branch_id: newBranchId });
+                            await updateLead(lead.id, {
+                              branch_id: newBranchId,
+                            });
                           } catch (error) {
                             console.error(error);
                           }
@@ -464,22 +459,6 @@ export default function Dashboard() {
                         {branches.map((branch) => (
                           <option key={branch.id} value={branch.id}>
                             {branch.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-
-                    <td className="p-0">
-                      <select
-                        value={lead.status_id}
-                        className="w-full h-full px-2 py-1 bg-transparent outline-none"
-                        onChange={(e) =>
-                          handleUpdate(lead.id, "status_id", e.target.value)
-                        }
-                      >
-                        {statuses.map((status) => (
-                          <option key={status.id} value={status.id}>
-                            {status.name}
                           </option>
                         ))}
                       </select>
@@ -499,7 +478,11 @@ export default function Dashboard() {
                         type="number"
                         defaultValue={lead.nominal}
                         onBlur={(e) =>
-                          handleUpdate(lead.id, "nominal", Number(e.target.value))
+                          handleUpdate(
+                            lead.id,
+                            "nominal",
+                            Number(e.target.value),
+                          )
                         }
                       />
                     </td>
@@ -524,7 +507,9 @@ export default function Dashboard() {
                       <div className="flex items-center justify-center gap-1 h-8 px-1">
                         <button
                           type="button"
-                          onClick={() => router.push(`/invoice?lead_id=${lead.id}`)}
+                          onClick={() =>
+                            router.push(`/invoice?lead_id=${lead.id}`)
+                          }
                           className="px-1.5 py-0.5 rounded text-[.6rem] font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 cursor-pointer whitespace-nowrap"
                         >
                           Invoice

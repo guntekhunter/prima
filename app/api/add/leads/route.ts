@@ -11,7 +11,6 @@ export async function POST(req: Request) {
       name,
       phone_number,
       branch_id,
-      status_id,
       address,
       nominal,
       platform_id,
@@ -22,7 +21,6 @@ export async function POST(req: Request) {
       !name ||
       !phone_number ||
       !branch_id ||
-      !status_id ||
       !address ||
       typeof nominal !== "number" ||
       !platform_id ||
@@ -30,7 +28,7 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -61,7 +59,7 @@ export async function POST(req: Request) {
       if (customerError) {
         return NextResponse.json(
           { error: customerError.message },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -79,14 +77,14 @@ export async function POST(req: Request) {
           name,
           phone_number,
           branch_id,
-          status_id,
           address,
           nominal,
           platform_id,
           user_id,
         },
       ])
-      .select(`
+      .select(
+        `
         id,
         customer_id,
         name,
@@ -94,27 +92,55 @@ export async function POST(req: Request) {
         address,
         nominal,
         branch_id,
-        status_id,
         platform_id,
         branches(name),
-        status(name),
         platform(name)
-      `)
+      `,
+      )
       .single();
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // =========================
+    // Insert/update invoice with total_prize = nominal
+    // =========================
+    const { data: existingInvoice } = await supabase
+      .from("invoices")
+      .select("id")
+      .eq("lead_id", data.id)
+      .maybeSingle();
+
+    if (existingInvoice) {
+      const { error: invoiceUpdateError } = await supabase
+        .from("invoices")
+        .update({ total_prize: nominal })
+        .eq("id", existingInvoice.id);
+
+      if (invoiceUpdateError) {
+        console.error("Error updating invoice total_prize:", invoiceUpdateError);
+      }
+    } else {
+      const { error: invoiceInsertError } = await supabase
+        .from("invoices")
+        .insert({
+          lead_id: data.id,
+          costumer_id: customerId,
+          invoice_number: `INV-${data.id}`,
+          total_prize: nominal,
+        });
+
+      if (invoiceInsertError) {
+        console.error("Error inserting invoice total_prize:", invoiceInsertError);
+      }
     }
 
     return NextResponse.json(data);
-
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -128,20 +154,14 @@ export async function DELETE(req: Request) {
     if (!id) {
       return NextResponse.json(
         { error: "Lead ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { error } = await supabase
-      .from("leads")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("leads").delete().eq("id", id);
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -151,7 +171,7 @@ export async function DELETE(req: Request) {
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
