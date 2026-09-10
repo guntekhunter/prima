@@ -14,6 +14,7 @@ export async function GET(req: Request) {
       lead_id,
       invoice_number,
       total_prize,
+      margin,
       created_at,
       invoice_items (
         id,
@@ -144,31 +145,36 @@ export async function POST(req: Request) {
       }
     }
 
-    // Update the lead's nominal value to the grand total of the invoice items
-    const grandTotal = items.reduce((sum: number, item: any) => {
+    // Retrieve lead to get its original nominal (from leads-input page)
+    const { data: leadData, error: leadFetchError } = await supabase
+      .from("leads")
+      .select("nominal")
+      .eq("id", lead_id)
+      .single();
+
+    if (leadFetchError) {
+      console.error("Error fetching lead nominal:", leadFetchError);
+    }
+    
+    const originalNominal = leadData?.nominal || 0;
+
+    // Calculate total expenses from items
+    const expensesTotal = items.reduce((sum: number, item: any) => {
       const qty = Number(item.qty) || 0;
       const prize = Number(item.prize) || 0;
       return sum + (qty * prize);
     }, 0);
 
-    const { error: leadUpdateError } = await supabase
-      .from("leads")
-      .update({ nominal: grandTotal })
-      .eq("id", lead_id);
+    const margin = originalNominal - expensesTotal;
 
-    if (leadUpdateError) {
-      console.error("Error updating lead nominal:", leadUpdateError);
-      return NextResponse.json({ error: leadUpdateError.message }, { status: 500 });
-    }
-
-    // Also keep invoices.total_prize in sync with the grand total
+    // Update invoice total_prize and margin
     const { error: invoiceTotalError } = await supabase
       .from("invoices")
-      .update({ total_prize: grandTotal })
+      .update({ total_prize: originalNominal, margin: margin })
       .eq("id", invoiceId);
 
     if (invoiceTotalError) {
-      console.error("Error updating invoice total_prize:", invoiceTotalError);
+      console.error("Error updating invoice total_prize and margin:", invoiceTotalError);
     }
 
     // Retrieve full invoice for response
@@ -180,6 +186,7 @@ export async function POST(req: Request) {
         lead_id,
         invoice_number,
         total_prize,
+        margin,
         created_at,
         invoice_items (
           id,

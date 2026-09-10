@@ -203,8 +203,6 @@ export default function InvoicePage() {
       const res = await axios.post("/api/invoices", payload);
       if (res.data) {
         setIsSaved(true);
-        const grandTotal = calculateSubtotal();
-        setLead((prev) => (prev ? { ...prev, nominal: grandTotal } : null));
         setSuccessMessage("Invoice successfully saved to Database!");
         setTimeout(() => setSuccessMessage(""), 5000);
       }
@@ -317,6 +315,7 @@ export default function InvoicePage() {
   }
 
   const subtotal = calculateSubtotal();
+  const margin = (lead.nominal || 0) - subtotal;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 text-zinc-800">
@@ -462,7 +461,7 @@ export default function InvoicePage() {
               </div>
             </div>
 
-            <div className="md:text-right">
+            <div className="md:text-right ">
               <h3 className="font-semibold text-zinc-400 uppercase tracking-wider mb-2">
                 Payment Details
               </h3>
@@ -471,6 +470,13 @@ export default function InvoicePage() {
                 BCA Account: 123-456-7890
               </div>
               <div className="text-zinc-600">A/N PT Prima Sukses</div>
+            </div>
+          </div>
+
+          <div className="py-5 text-xs">
+            <div className="flex">
+              <span>Total Nilai Proyek: </span>
+              <span>Rp {(lead.nominal || 0).toLocaleString("id-ID")}</span>
             </div>
           </div>
 
@@ -633,6 +639,14 @@ export default function InvoicePage() {
             )}
           </div>
 
+          {/* margin card */}
+          <div>
+            <div className="flex justify-between border-zinc-200 pt-2 font-bold text-sm">
+              <span>Margin</span>
+              <span>Rp {margin.toLocaleString("id-ID")}</span>
+            </div>
+          </div>
+
           {/* Pricing Totals & Signatures */}
           <div className="border-t border-zinc-200 pt-6 flex flex-col md:flex-row justify-between gap-8">
             <div className="max-w-xs text-[10px] text-zinc-400 space-y-1">
@@ -687,31 +701,6 @@ export default function InvoicePage() {
               <FileDown size={14} />
               {downloading ? "Generating PDF..." : "Download PDF"}
             </button>
-          </div>
-
-          <div className="bg-zinc-100/50 border border-zinc-200/60 rounded-2xl p-4 text-[10px] text-zinc-500 space-y-2">
-            <div className="font-bold text-zinc-700">Quick Instructions</div>
-            <p>
-              1. Pre-populated fields derive from the Closing Lead details
-              automatically.
-            </p>
-            <p>
-              2. The invoice number is automatically generated and guaranteed
-              unique.
-            </p>
-            <p>
-              3. You can add extra product items or modify product names, codes,
-              quantities, and pricing.
-            </p>
-            <p>
-              4. Clicking <strong>Save Invoice</strong> commits the record to
-              Database.
-            </p>
-            <p>
-              5. Clicking <strong>Download PDF</strong> captures the invoice
-              card and saves it as a paginated A4 PDF file directly to your
-              device.
-            </p>
           </div>
         </div>
       </div>
