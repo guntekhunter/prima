@@ -88,3 +88,13 @@ export const getInvoiceCategories = async () => {
     return [];
   }
 };
+
+export const getUnits = async () => {
+  try {
+    const res = await axios.get("/api/get/units");
+    return res.data as { id: string; name: string }[];
+  } catch (error) {
+    console.log("Failed to fetch units", error);
+    return [];
+  }
+};

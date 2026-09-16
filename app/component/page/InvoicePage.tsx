@@ -10,7 +10,7 @@ import {
   Save,
   CheckCircle,
 } from "lucide-react";
-import { getBranch, getInvoiceCategories } from "@/app/fetch/get/fetch";
+import { getBranch, getInvoiceCategories, getUnits } from "@/app/fetch/get/fetch";
 import axios from "axios";
 
 type Branch = {
@@ -23,12 +23,18 @@ type InvoiceCategory = {
   category_name: string;
 };
 
+type Unit = {
+  id: string;
+  name: string;
+};
+
 type InvoiceItem = {
   id?: string | number;
   category_id: string;
   product_code: string;
   product_name: string;
   qty: number;
+  unit_id: string;
   prize: number;
   total: number;
 };
@@ -55,6 +61,7 @@ export default function InvoicePage() {
   const [lead, setLead] = useState<Lead | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [categories, setCategories] = useState<InvoiceCategory[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [items, setItems] = useState<InvoiceItem[]>([]);
@@ -88,14 +95,16 @@ export default function InvoicePage() {
       try {
         setLoading(true);
 
-        // Fetch branches and categories
-        const [branchRes, categoryRes] = await Promise.all([
+        // Fetch branches, categories, and units
+        const [branchRes, categoryRes, unitsRes] = await Promise.all([
           getBranch(),
           getInvoiceCategories(),
+          getUnits(),
         ]);
         const branchList = branchRes?.data || [];
         setBranches(branchList);
         setCategories(categoryRes || []);
+        setUnits(unitsRes || []);
 
         // Fetch lead details
         const leadRes = await axios.get(`/api/leads/${leadId}`);
@@ -121,6 +130,7 @@ export default function InvoicePage() {
             product_code: item.product_code,
             product_name: item.product_name,
             qty: item.qty,
+            unit_id: item.unit_id || "",
             branch_id: item.branch_id,
             prize: item.prize,
             total: item.total,
@@ -158,6 +168,7 @@ export default function InvoicePage() {
         product_code: "",
         product_name: "",
         qty: 1,
+        unit_id: "",
         prize: 0,
         total: 0,
       },
@@ -520,11 +531,14 @@ export default function InvoicePage() {
                         <thead>
                           <tr className="border-b border-zinc-200 text-zinc-400 uppercase font-semibold">
                             <th className="py-2 px-3 w-[14%]">Code</th>
-                            <th className="py-2 px-3 w-[36%]">
+                            <th className="py-2 px-3 w-[30%]">
                               Product / Service Name
                             </th>
                             <th className="py-2 px-3 w-[8%] text-center">
                               Qty
+                            </th>
+                            <th className="py-2 px-3 w-[12%] text-center">
+                              Unit
                             </th>
                             <th className="py-2 px-3 w-[14%] text-right">
                               Price
@@ -585,6 +599,25 @@ export default function InvoicePage() {
                                   }
                                   className="w-12 text-center bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
                                 />
+                              </td>
+                              <td className="py-2 px-3 text-center no-print">
+                                <select
+                                  value={item.unit_id}
+                                  onChange={(e) =>
+                                    updateItem(globalIndex, "unit_id", e.target.value)
+                                  }
+                                  className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1 text-xs text-center"
+                                >
+                                  <option value="">— Unit —</option>
+                                  {units.map((u) => (
+                                    <option key={u.id} value={u.id}>
+                                      {u.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <span className="print-only text-xs">
+                                  {units.find((u) => u.id === item.unit_id)?.name || ""}
+                                </span>
                               </td>
                               <td className="py-2 px-3 text-right">
                                 <input

@@ -26,7 +26,8 @@ export async function GET(req: Request) {
         branch_id,
         prize,
         total,
-        invoice_category_id
+        invoice_category_id,
+        unit_id
       )
     `);
 
@@ -130,6 +131,7 @@ export async function POST(req: Request) {
         product_code: item.product_code || "",
         product_name: item.product_name || "",
         qty: Number(item.qty) || 0,
+        unit_id: item.unit_id || null,
         branch_id: item.branch_id || null,
         prize: Number(item.prize) || 0,
         total: Number(item.total) || (Number(item.qty) || 0) * (Number(item.prize) || 0),
@@ -198,7 +200,8 @@ export async function POST(req: Request) {
           branch_id,
           prize,
           total,
-          invoice_category_id
+          invoice_category_id,
+          unit_id
         )
       `)
       .eq("id", invoiceId)

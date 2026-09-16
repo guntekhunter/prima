@@ -12,6 +12,7 @@ import {
   LogOut,
   BarChart3,
   X,
+  Wallet,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -55,6 +56,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           setMenuItems([
             { name: "Project Costing", href: "/leads-input", icon: Home },
             { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
+            { name: "Cash Advance", href: "/cash-advance", icon: Wallet },
             { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
             { name: "Tambah Pengguna", href: "/register", icon: User },
           ]);
