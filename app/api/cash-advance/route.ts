@@ -16,7 +16,7 @@ export async function GET() {
         nominal,
         ket,
         created_at,
-        profiles ( full_name, email )
+        profiles ( *, roles(name) )
       `,
       )
       .order("created_at", { ascending: false });
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         nominal,
         ket,
         created_at,
-        profiles ( full_name, email )
+        profiles ( *, roles(name) )
       `,
       )
       .single();

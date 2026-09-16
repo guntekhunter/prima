@@ -161,6 +161,7 @@ export default function Report() {
   const [expenseCategories, setExpenseCategories] = useState<
     { id: string; name: string }[]
   >([]);
+  const [advances, setAdvances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
@@ -207,6 +208,7 @@ export default function Report() {
           expensesData,
           invoicesData,
           categoriesRes,
+          advancesRes,
         ] = await Promise.all([
           getBranch(),
           getStatus(),
@@ -214,6 +216,7 @@ export default function Report() {
           getExpenses(),
           getInvoices(),
           getExpenseCategories(),
+          axios.get("/api/cash-advance"),
         ]);
 
         setBranches(branchesRes?.data || []);
@@ -226,6 +229,7 @@ export default function Report() {
             ? categoriesRes
             : (categoriesRes as any)?.data || [],
         );
+        setAdvances(advancesRes.data || []);
       } catch (err) {
         console.error("Error initializing report page:", err);
       } finally {
@@ -382,6 +386,39 @@ export default function Report() {
   const shareProfitBranchPIC = netProfit * SHARE_PROFIT_RATES.branchPIC;
   const shareProfitSurveyor = netProfit * SHARE_PROFIT_RATES.surveyor;
   const shareProfitHolding = netProfit * SHARE_PROFIT_RATES.holding;
+
+  // Find branches that have margin in the current filtered period
+  const branchesWithMargin = new Set();
+  filteredInvoices.forEach(inv => {
+    if ((inv.margin || 0) > 0 && inv.leads?.branch_id) {
+      branchesWithMargin.add(inv.leads.branch_id);
+    }
+  });
+
+  // Subtract Cash Advances for Branch PIC
+  const branchPICAdvances = advances
+    .filter((adv) => {
+      const role = String(
+        adv.profiles?.roles?.name || adv.profiles?.role || "",
+      ).toLowerCase();
+      const isBranchPIC = role.includes("branch pic");
+      if (!isBranchPIC) return false;
+
+      const profileBranch = adv.profiles?.branch_d || adv.profiles?.branch_id;
+
+      // Filter by selected branch if one is selected
+      if (selectedBranch) {
+        if (profileBranch !== selectedBranch) return false;
+      } else {
+        // Only include advance if the branch has margin in this period
+        if (!branchesWithMargin.has(profileBranch)) return false;
+      }
+
+      return true;
+    })
+    .reduce((sum, adv) => sum + Number(adv.nominal || 0), 0);
+
+  const finalShareProfitBranchPIC = shareProfitBranchPIC - branchPICAdvances;
 
   if (loading) {
     return (
@@ -650,9 +687,9 @@ export default function Report() {
           {/* Branch PIC */}
           <div
             className={`rounded-2xl border-2 p-6 space-y-3 ${
-              netProfit >= 0
+              finalShareProfitBranchPIC >= 0
                 ? "bg-blue-50/60 border-blue-200"
-                : "bg-zinc-50 border-zinc-200"
+                : "bg-red-50/60 border-red-200"
             }`}
           >
             <div className="flex items-center justify-between">
@@ -671,14 +708,17 @@ export default function Report() {
             <div>
               <span
                 className={`text-2xl font-black tracking-tight ${
-                  netProfit >= 0 ? "text-blue-800" : "text-zinc-500"
+                  finalShareProfitBranchPIC >= 0 ? "text-blue-800" : "text-red-600"
                 }`}
               >
-                {formatRp(shareProfitBranchPIC)}
+                {formatRp(finalShareProfitBranchPIC)}
               </span>
-              <p className="text-[10px] text-zinc-400 mt-0.5">
-                35% × {formatRp(netProfit)}
-              </p>
+              <div className="text-[10px] text-zinc-400 mt-1 space-y-0.5">
+                <p className="text-red-500 font-medium">
+                  - Branch PIC advance: {formatRp(branchPICAdvances)}
+                </p>
+                <p>35% Profit: {formatRp(shareProfitBranchPIC)}</p>
+              </div>
             </div>
           </div>
 
