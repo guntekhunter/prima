@@ -1,4 +1,5 @@
 "use client";
+import axios from "axios";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -187,6 +188,18 @@ export default function Report() {
         if (!user) {
           router.push("/login");
           return;
+        }
+
+        try {
+          const res = await axios.post("/api/auth/me", { userId: user.id });
+          const profile = res.data?.profile;
+          const roleName = (profile?.roles as any)?.name?.toLowerCase() || (profile?.roles as any[])?.[0]?.name?.toLowerCase() || profile?.role?.toLowerCase() || "";
+          if (!roleName.includes("super")) {
+            router.push("/pengeluaran");
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to load profile", err);
         }
 
         setUser(user);

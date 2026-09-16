@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -15,23 +15,64 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+import axios from "axios";
+
 export default function Sidebar({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   const AUTH_PAGES = ["/"];
   const isAuthPage = AUTH_PAGES.some(
     (p) => pathname === p || pathname.startsWith(p + "/"),
   );
 
-  const menuItems = [
+  const [menuItems, setMenuItems] = useState([
     { name: "Project Costing", href: "/leads-input", icon: Home },
     { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
     { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
     { name: "Tambah Pengguna", href: "/register", icon: User },
-  ];
+  ]);
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const res = await axios.post("/api/auth/me", { userId: user.id });
+        const profile = res.data?.profile;
+        
+        const roleName = (profile?.roles as any)?.name?.toLowerCase() || (profile?.roles as any[])?.[0]?.name?.toLowerCase() || profile?.role?.toLowerCase() || "";
+        setUserRole(roleName);
+
+        // Super admin sees everything. Others see restricted items.
+        if (roleName.includes("super")) {
+          // Keep all items
+          setMenuItems([
+            { name: "Project Costing", href: "/leads-input", icon: Home },
+            { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
+            { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
+            { name: "Tambah Pengguna", href: "/register", icon: User },
+          ]);
+        } else {
+          // Only Pengeluaran for surveyor, branch PIC, etc.
+          setMenuItems([
+            { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load profile for sidebar", err);
+      }
+    }
+    
+    if (!isAuthPage) {
+      loadProfile();
+    }
+  }, [isAuthPage]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();

@@ -13,6 +13,7 @@ import {
 import { createLead } from "@/app/fetch/add/fetch";
 import { deleteLead } from "@/app/fetch/delete/fetch";
 import { updateLead } from "@/app/fetch/update/fetch";
+import axios from "axios";
 import { Loader2, Users, TrendingUp, DollarSign, Layers } from "lucide-react";
 
 type Branch = {
@@ -63,6 +64,18 @@ export default function Dashboard() {
         if (!user) {
           router.push("/login");
           return;
+        }
+
+        try {
+          const res = await axios.post("/api/auth/me", { userId: user.id });
+          const profile = res.data?.profile;
+          const roleName = (profile?.roles as any)?.name?.toLowerCase() || (profile?.roles as any[])?.[0]?.name?.toLowerCase() || profile?.role?.toLowerCase() || "";
+          if (!roleName.includes("super")) {
+            router.push("/pengeluaran");
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to load profile", err);
         }
 
         setUser(user);
