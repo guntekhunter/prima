@@ -193,11 +193,7 @@ export default function Report() {
         try {
           const res = await axios.post("/api/auth/me", { userId: user.id });
           const profile = res.data?.profile;
-          const roleName = (profile?.roles as any)?.name?.toLowerCase() || (profile?.roles as any[])?.[0]?.name?.toLowerCase() || profile?.role?.toLowerCase() || "";
-          if (!roleName.includes("super")) {
-            router.push("/pengeluaran");
-            return;
-          }
+          // You could optionally store the role here if you want to conditionally render things
         } catch (err) {
           console.error("Failed to load profile", err);
         }

@@ -71,7 +71,7 @@ export default function Dashboard() {
           const profile = res.data?.profile;
           const roleName = (profile?.roles as any)?.name?.toLowerCase() || (profile?.roles as any[])?.[0]?.name?.toLowerCase() || profile?.role?.toLowerCase() || "";
           if (!roleName.includes("super")) {
-            router.push("/pengeluaran");
+            router.push("/report");
             return;
           }
         } catch (err) {

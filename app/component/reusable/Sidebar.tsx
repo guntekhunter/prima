@@ -59,9 +59,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             { name: "Tambah Pengguna", href: "/register", icon: User },
           ]);
         } else {
-          // Only Pengeluaran for surveyor, branch PIC, etc.
+          // Only Report for surveyor, branch PIC, etc.
           setMenuItems([
-            { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
+            { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
           ]);
         }
       } catch (err) {
