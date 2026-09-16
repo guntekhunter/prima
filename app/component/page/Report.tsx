@@ -8,21 +8,23 @@ import {
   getLeads,
   getStatus,
   getExpenses,
+  getInvoices,
+  getExpenseCategories,
 } from "@/app/fetch/get/fetch";
 import {
   TrendingUp,
   TrendingDown,
   DollarSign,
   Building,
-  FileText,
   Percent,
   PieChart,
-  BarChart3,
-  ArrowUpRight,
   Loader2,
   Briefcase,
   SlidersHorizontal,
   Calendar,
+  Users,
+  Landmark,
+  UserCheck,
 } from "lucide-react";
 
 type Branch = {
@@ -56,6 +58,15 @@ type Expense = {
   branches?: { name: string } | null;
 };
 
+type Invoice = {
+  id: string;
+  margin: number;
+  total_prize: number;
+  created_at: string;
+  lead_id: string;
+  leads: { branch_id: string } | null;
+};
+
 // Helper to extract YYYY-MM
 const getYearMonth = (dateStr?: string) => {
   if (!dateStr) return "";
@@ -81,7 +92,7 @@ const getStartOfWeekDate = (dateStr?: string) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-// Format YYYY-MM into Indonessian Month Year label
+// Format YYYY-MM into Indonesian Month Year label
 const formatMonthLabel = (yearMonthStr: string) => {
   if (!yearMonthStr) return "";
   const parts = yearMonthStr.split("-");
@@ -129,20 +140,31 @@ const formatWeekLabel = (mondayStr: string) => {
   return `${start} - ${end}`;
 };
 
+const formatRp = (val: number) => `Rp ${val.toLocaleString("id-ID")}`;
+
+const SHARE_PROFIT_RATES = {
+  branchPIC: 0.35,
+  surveyor: 0.35,
+  holding: 0.3,
+};
+
 export default function Report() {
   const router = useRouter();
 
   const [user, setUser] = useState<any>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [statuses, setStatuses] = useState<StatusOption[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
   const [selectedBranch, setSelectedBranch] = useState("");
   const [omsetSource, setOmsetSource] = useState("closing"); // "closing" or "all"
-  const [manualHpp, setManualHpp] = useState<number | "">(0);
 
   // Time filter states
   const [timeFilterType, setTimeFilterType] = useState<
@@ -169,18 +191,32 @@ export default function Report() {
 
         setUser(user);
 
-        const [branchesRes, statusRes, leadsData, expensesData] =
-          await Promise.all([
-            getBranch(),
-            getStatus(),
-            getLeads(),
-            getExpenses(),
-          ]);
+        const [
+          branchesRes,
+          statusRes,
+          leadsData,
+          expensesData,
+          invoicesData,
+          categoriesRes,
+        ] = await Promise.all([
+          getBranch(),
+          getStatus(),
+          getLeads(),
+          getExpenses(),
+          getInvoices(),
+          getExpenseCategories(),
+        ]);
 
         setBranches(branchesRes?.data || []);
         setStatuses(statusRes?.data || []);
         setLeads(leadsData || []);
         setExpenses(expensesData || []);
+        setInvoices(invoicesData || []);
+        setExpenseCategories(
+          Array.isArray(categoriesRes)
+            ? categoriesRes
+            : (categoriesRes as any)?.data || [],
+        );
       } catch (err) {
         console.error("Error initializing report page:", err);
       } finally {
@@ -191,53 +227,51 @@ export default function Report() {
     init();
   }, [router]);
 
-  // Reactively compute available months/weeks list based on current leads/expenses
+  // Reactively compute available months/weeks list from ALL raw data (no branch filter —
+  // the dropdowns should always show every month/week that exists in the dataset).
   useEffect(() => {
-    const leadMonths = leads
-      .map((l) => getYearMonth(l.created_at))
-      .filter(Boolean);
-    const expMonths = expenses
-      .map((e) => getYearMonth(e.created_at))
-      .filter(Boolean);
-    const uniqueMonths = Array.from(new Set([...leadMonths, ...expMonths]))
-      .sort()
-      .reverse();
-    setAvailableMonths(uniqueMonths);
+    const allDates = [
+      ...leads.map((l) => l.created_at),
+      ...expenses.map((e) => e.created_at),
+      ...invoices.map((i) => i.created_at),
+    ];
 
-    const leadWeeks = leads
-      .map((l) => getStartOfWeekDate(l.created_at))
-      .filter(Boolean);
-    const expWeeks = expenses
-      .map((e) => getStartOfWeekDate(e.created_at))
-      .filter(Boolean);
-    const uniqueWeeks = Array.from(new Set([...leadWeeks, ...expWeeks]))
+    console.log("LEADS:", leads);
+    console.log("EXPENSES:", expenses);
+    console.log("INVOICES:", invoices);
+    console.log("ALL DATES:", allDates);
+    console.log("MONTHS:", allDates.map(getYearMonth));
+
+    const uniqueMonths = Array.from(
+      new Set(allDates.map(getYearMonth).filter(Boolean)),
+    )
       .sort()
       .reverse();
+
+    const uniqueWeeks = Array.from(
+      new Set(allDates.map(getStartOfWeekDate).filter(Boolean)),
+    )
+      .sort()
+      .reverse();
+
+    setAvailableMonths(uniqueMonths);
     setAvailableWeeks(uniqueWeeks);
 
-    // Dynamic auto-select defaults
-    if (
-      uniqueMonths.length > 0 &&
-      (!selectedMonth || !uniqueMonths.includes(selectedMonth))
-    ) {
-      setSelectedMonth(uniqueMonths[0]);
-    }
-    if (
-      uniqueWeeks.length > 0 &&
-      (!selectedWeek || !uniqueWeeks.includes(selectedWeek))
-    ) {
-      setSelectedWeek(uniqueWeeks[0]);
-    }
-  }, [leads, expenses, selectedBranch]);
+    // Set defaults only on first load (when nothing is selected yet)
+    setSelectedMonth((prev) =>
+      prev && uniqueMonths.includes(prev) ? prev : (uniqueMonths[0] ?? ""),
+    );
+    setSelectedWeek((prev) =>
+      prev && uniqueWeeks.includes(prev) ? prev : (uniqueWeeks[0] ?? ""),
+    );
+  }, [leads, expenses, invoices]);
 
-  // Filtering logic
+  // ---- Filtering logic ----
   const filteredLeads = leads.filter((lead) => {
     if (selectedBranch && lead.branch_id !== selectedBranch) return false;
     if (omsetSource === "closing") {
       if (lead.status?.name?.toLowerCase() !== "closing") return false;
     }
-
-    // Time Period Filter
     if (timeFilterType === "month") {
       if (!lead.created_at || getYearMonth(lead.created_at) !== selectedMonth)
         return false;
@@ -248,14 +282,11 @@ export default function Report() {
       )
         return false;
     }
-
     return true;
   });
 
   const filteredExpenses = expenses.filter((expense) => {
     if (selectedBranch && expense.branch_id !== selectedBranch) return false;
-
-    // Time Period Filter
     if (timeFilterType === "month") {
       if (
         !expense.created_at ||
@@ -269,38 +300,79 @@ export default function Report() {
       )
         return false;
     }
+    return true;
+  });
+
+  // Build a set of lead IDs that passed the leads filter (branch + status/omset source + time)
+  // This is used to restrict invoice margin to the same scope.
+  const filteredLeadIds = new Set(filteredLeads.map((l) => String(l.id)));
+
+  const filteredInvoices = invoices.filter((inv) => {
+    // Branch filter — use branch_id from the joined lead
+    if (selectedBranch) {
+      const invBranch = inv.leads?.branch_id;
+      if (invBranch !== selectedBranch) return false;
+    }
+
+    // Date filter on invoice's own created_at
+    if (timeFilterType === "month") {
+      if (!inv.created_at || getYearMonth(inv.created_at) !== selectedMonth)
+        return false;
+    } else if (timeFilterType === "week") {
+      if (
+        !inv.created_at ||
+        getStartOfWeekDate(inv.created_at) !== selectedWeek
+      )
+        return false;
+    }
 
     return true;
   });
 
-  // Calculations
-  const omset = filteredLeads.reduce(
-    (sum, lead) => sum + (lead.nominal || 0),
+  // ---- Calculations ----
+
+  // Total margin from all (filtered) invoices
+  const totalMargin = filteredInvoices.reduce(
+    (sum, inv) => sum + (inv.margin || 0),
     0,
   );
-  const hpp = manualHpp === "" ? 0 : Number(manualHpp);
-  const grossProfit = omset - hpp;
-  const grossProfitMargin = omset > 0 ? (grossProfit / omset) * 100 : 0;
 
-  const opex = filteredExpenses.reduce(
-    (sum, exp) => sum + (exp.amount || 0),
-    0,
+  // Resolve capex & opex category IDs from the fetched categories list.
+  // Uses a loose name match (includes) so it works regardless of exact casing or full name.
+  const capexCategory = expenseCategories.find(
+    (c) =>
+      c.name.toLowerCase().includes("capex") ||
+      c.name.toLowerCase().includes("apex"),
   );
-  const netProfit = grossProfit - opex;
-  const netProfitMargin = omset > 0 ? (netProfit / omset) * 100 : 0;
+  const capexCategoryId = capexCategory?.id;
+  const capexCategoryName =
+    capexCategory?.name || "Capital Expenditure (Capex / Apex)";
 
-  // Group expenses by category for breakdown
-  const expensesByCategory: { [key: string]: number } = {};
-  filteredExpenses.forEach((exp) => {
-    const catName = exp.expense_categories?.name || "Lain-lain";
-    expensesByCategory[catName] =
-      (expensesByCategory[catName] || 0) + exp.amount;
-  });
+  const opexCategory = expenseCategories.find((c) =>
+    c.name.toLowerCase().includes("opex"),
+  );
+  const opexCategoryId = opexCategory?.id;
+  const opexCategoryName = opexCategory?.name || "Biaya Operasional (Opex)";
 
-  // Sort categories by amount descending
-  const sortedExpenseCategories = Object.entries(expensesByCategory)
-    .map(([name, amount]) => ({ name, amount }))
-    .sort((a, b) => b.amount - a.amount);
+  // Filter by category_id directly — no fragile string comparison on joined data
+  const capex = filteredExpenses
+    .filter((exp) => exp.category_id === capexCategoryId)
+    .reduce((sum, exp) => sum + (exp.amount || 0), 0);
+
+  const opex = filteredExpenses
+    .filter((exp) => exp.category_id === opexCategoryId)
+    .reduce((sum, exp) => sum + (exp.amount || 0), 0);
+
+  const totalExpenses = capex + opex;
+
+  // Net Profit = Total Margin from invoices - Capex - Opex
+  const netProfit = totalMargin - totalExpenses;
+  const netProfitMargin = totalMargin > 0 ? (netProfit / totalMargin) * 100 : 0;
+
+  // Share Profit based on net profit
+  const shareProfitBranchPIC = netProfit * SHARE_PROFIT_RATES.branchPIC;
+  const shareProfitSurveyor = netProfit * SHARE_PROFIT_RATES.surveyor;
+  const shareProfitHolding = netProfit * SHARE_PROFIT_RATES.holding;
 
   if (loading) {
     return (
@@ -322,8 +394,7 @@ export default function Report() {
             Laporan Keuangan
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
-            Ikhtisar laba rugi, omset penjualan, HPP, opex, dan laba bersih
-            operasional.
+            Ikhtisar margin invoices, capex, opex, net profit, dan share profit.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold shadow-sm">
@@ -341,8 +412,7 @@ export default function Report() {
           </h3>
         </div>
 
-        {/* Filters Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {/* Branch Filter */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -398,7 +468,6 @@ export default function Report() {
             </select>
           </div>
 
-          {/* Dynamic Detail Selector */}
           {timeFilterType === "month" && (
             <div className="space-y-1.5 transition-all">
               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -449,254 +518,273 @@ export default function Report() {
         </div>
       </div>
 
-      {/* Main Financial Report Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-8 items-start">
-        {/* Laporan Laba Rugi (Income Statement) Card */}
-        <div className="lg:col-span-5 bg-white border border-zinc-200 shadow-xl rounded-2xl p-8 space-y-6">
-          {/* Header Statement */}
-          <div className="border-b border-zinc-200 pb-5 text-center md:text-left">
-            <h2 className="text-xl font-black text-zinc-950 tracking-tight font-sans">
-              LAPORAN LABA RUGI
-            </h2>
-            <p className="text-[10px] text-zinc-450 font-bold tracking-wider uppercase mt-1 leading-relaxed">
-              Periode:{" "}
-              {timeFilterType === "all"
-                ? "Semua Waktu (Akumulasi)"
-                : timeFilterType === "month"
-                  ? `Bulan ${formatMonthLabel(selectedMonth)}`
-                  : `Minggu: ${formatWeekLabel(selectedWeek)}`}{" "}
-              <br className="md:hidden" />
-              <span className="hidden md:inline"> | </span>
-              Cabang:{" "}
-              {selectedBranch
-                ? branches.find((b) => b.id === selectedBranch)?.name
-                : "Semua Cabang"}
-            </p>
+      {/* Main Financial Report Card */}
+      <div className="bg-white border border-zinc-200 shadow-xl rounded-2xl p-8 space-y-6">
+        {/* Header */}
+        <div className="border-b border-zinc-200 pb-5 text-center md:text-left">
+          <h2 className="text-xl font-black text-zinc-950 tracking-tight font-sans">
+            LAPORAN LABA RUGI
+          </h2>
+          <p className="text-[10px] text-zinc-450 font-bold tracking-wider uppercase mt-1 leading-relaxed">
+            Periode:{" "}
+            {timeFilterType === "all"
+              ? "Semua Waktu (Akumulasi)"
+              : timeFilterType === "month"
+                ? `Bulan ${formatMonthLabel(selectedMonth)}`
+                : `Minggu: ${formatWeekLabel(selectedWeek)}`}{" "}
+            <br className="md:hidden" />
+            <span className="hidden md:inline"> | </span>
+            Cabang:{" "}
+            {selectedBranch
+              ? branches.find((b) => b.id === selectedBranch)?.name
+              : "Semua Cabang"}
+          </p>
+        </div>
+
+        {/* Financial Figures */}
+        <div className="space-y-3">
+          {/* Total Margin from Invoices */}
+          <div className="flex justify-between items-center py-3 border-b border-zinc-100">
+            <div className="space-y-0.5">
+              <span className="font-semibold text-sm text-zinc-700">
+                Total Margin (dari Invoice)
+              </span>
+              <p className="text-[10px] text-zinc-400 leading-none">
+                Jumlah margin dari {filteredInvoices.length} invoice
+              </p>
+            </div>
+            <span className="font-extrabold text-base text-zinc-950">
+              {formatRp(totalMargin)}
+            </span>
           </div>
 
-          {/* Financial Figures Table */}
-          <div className="space-y-4">
-            {/* Omset / Pendapatan */}
-            <div className="flex justify-between items-center py-3 border-b border-zinc-100">
-              <div className="space-y-0.5">
-                <span className="font-semibold text-sm text-zinc-700">
-                  Total Pendapatan (Omset)
-                </span>
-                <p className="text-[10px] text-zinc-400 leading-none">
-                  Dari nominal leads ({filteredLeads.length} transaksi)
-                </p>
-              </div>
-              <span className="font-extrabold text-base text-zinc-950">
-                Rp {omset.toLocaleString("id-ID")}
+          {/* CAPEX / APEX */}
+          <div className="flex justify-between items-center py-3 border-b border-zinc-100">
+            <div className="space-y-0.5">
+              <span className="font-semibold text-sm text-zinc-700">
+                {capexCategoryName}
               </span>
+              <p className="text-[10px] text-zinc-400 leading-none">
+                Pengeluaran kategori {capexCategoryName}
+              </p>
             </div>
+            <span className="font-extrabold text-base text-red-600">
+              - {formatRp(capex)}
+            </span>
+          </div>
 
-            {/* Gross Profit */}
-            <div className="flex justify-between items-center py-3.5 bg-zinc-50 rounded-xl px-4 my-2 border border-zinc-100">
-              <div className="space-y-0.5">
+          {/* OPEX */}
+          <div className="flex justify-between items-center py-3 border-b border-zinc-100">
+            <div className="space-y-0.5">
+              <span className="font-semibold text-sm text-zinc-700">
+                {opexCategoryName}
+              </span>
+              <p className="text-[10px] text-zinc-400 leading-none">
+                Pengeluaran kategori {opexCategoryName}
+              </p>
+            </div>
+            <span className="font-extrabold text-base text-red-600">
+              - {formatRp(opex)}
+            </span>
+          </div>
+
+          {/* Net Profit */}
+          <div
+            className={`flex justify-between items-center py-5 rounded-2xl px-5 mt-4 border-2 ${
+              netProfit >= 0
+                ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
+                : "bg-red-50/70 border-red-200 text-red-950"
+            }`}
+          >
+            <div className="space-y-0.5">
+              <span className="font-black text-base uppercase tracking-tight">
+                Net Profit
+              </span>
+              <div className="flex items-center gap-1.5">
+                {netProfit >= 0 ? (
+                  <TrendingUp size={14} className="text-emerald-600" />
+                ) : (
+                  <TrendingDown size={14} className="text-red-600" />
+                )}
+                <span className="text-xs font-bold">
+                  Margin Bersih: {netProfitMargin.toFixed(1)}%
+                </span>
+              </div>
+              <p className="text-[10px] opacity-70 leading-none mt-1">
+                Total Margin - Capex - Opex
+              </p>
+            </div>
+            <span
+              className={`text-2xl font-black tracking-tight ${
+                netProfit >= 0 ? "text-emerald-800" : "text-red-700"
+              }`}
+            >
+              {formatRp(netProfit)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Share Profit Cards */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <PieChart size={18} className="text-zinc-500" />
+          <h2 className="text-lg font-bold text-zinc-950 tracking-tight">
+            Distribusi Share Profit
+          </h2>
+        </div>
+        <p className="text-xs text-zinc-400 mb-5">
+          Pembagian dari Net Profit berdasarkan persentase kesepakatan.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* Branch PIC */}
+          <div
+            className={`rounded-2xl border-2 p-6 space-y-3 ${
+              netProfit >= 0
+                ? "bg-blue-50/60 border-blue-200"
+                : "bg-zinc-50 border-zinc-200"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 rounded-xl">
+                  <UserCheck size={18} className="text-blue-700" />
+                </div>
                 <span className="font-bold text-sm text-zinc-800">
-                  Laba Kotor (Gross Profit)
+                  Branch PIC
                 </span>
-                <div className="flex items-center gap-1">
-                  <Percent size={11} className="text-zinc-400" />
-                  <span className="text-[10px] text-zinc-500 font-semibold">
-                    Margin: {grossProfitMargin.toFixed(1)}%
-                  </span>
-                </div>
               </div>
-              <span className="font-extrabold text-lg text-zinc-950">
-                Rp {grossProfit.toLocaleString("id-ID")}
+              <span className="text-xs font-black text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
+                35%
               </span>
             </div>
+            <div>
+              <span
+                className={`text-2xl font-black tracking-tight ${
+                  netProfit >= 0 ? "text-blue-800" : "text-zinc-500"
+                }`}
+              >
+                {formatRp(shareProfitBranchPIC)}
+              </span>
+              <p className="text-[10px] text-zinc-400 mt-0.5">
+                35% × {formatRp(netProfit)}
+              </p>
+            </div>
+          </div>
 
-            {/* Opex */}
-            <div className="flex justify-between items-center py-3 border-b border-zinc-100">
-              <div className="space-y-0.5">
-                <span className="font-semibold text-sm text-zinc-700">
-                  Biaya Operasional (Opex)
+          {/* Surveyor */}
+          <div
+            className={`rounded-2xl border-2 p-6 space-y-3 ${
+              netProfit >= 0
+                ? "bg-violet-50/60 border-violet-200"
+                : "bg-zinc-50 border-zinc-200"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-violet-100 rounded-xl">
+                  <Users size={18} className="text-violet-700" />
+                </div>
+                <span className="font-bold text-sm text-zinc-800">
+                  Surveyor
                 </span>
-                <p className="text-[10px] text-zinc-400 leading-none">
-                  Berdasarkan tabel pengeluaran ({filteredExpenses.length}{" "}
-                  transaksi)
-                </p>
               </div>
-              <span className="font-extrabold text-base text-red-650">
-                - Rp {opex.toLocaleString("id-ID")}
+              <span className="text-xs font-black text-violet-700 bg-violet-100 px-2.5 py-1 rounded-full">
+                35%
               </span>
             </div>
-
-            {/* Net Profit */}
-            <div
-              className={`flex justify-between items-center py-5 rounded-2xl px-5 mt-4 border-2 ${
-                netProfit >= 0
-                  ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
-                  : "bg-red-50/70 border-red-200 text-red-950"
-              }`}
-            >
-              <div className="space-y-0.5">
-                <span className="font-black text-base uppercase tracking-tight">
-                  Laba Bersih (Net Profit)
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {netProfit >= 0 ? (
-                    <TrendingUp size={14} className="text-emerald-600" />
-                  ) : (
-                    <TrendingDown size={14} className="text-red-650" />
-                  )}
-                  <span className="text-xs font-bold">
-                    Margin Bersih: {netProfitMargin.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-              <div className="text-right">
-                <span
-                  className={`text-2xl font-black tracking-tight ${
-                    netProfit >= 0 ? "text-emerald-800" : "text-red-750"
-                  }`}
-                >
-                  Rp {netProfit.toLocaleString("id-ID")}
-                </span>
-              </div>
+            <div>
+              <span
+                className={`text-2xl font-black tracking-tight ${
+                  netProfit >= 0 ? "text-violet-800" : "text-zinc-500"
+                }`}
+              >
+                {formatRp(shareProfitSurveyor)}
+              </span>
+              <p className="text-[10px] text-zinc-400 mt-0.5">
+                35% × {formatRp(netProfit)}
+              </p>
             </div>
-            {/* Net Profit */}
-            <div
-              className={`flex justify-between items-center py-5 rounded-2xl px-5 mt-4 border-2 ${
-                netProfit >= 0
-                  ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
-                  : "bg-red-50/70 border-red-200 text-red-950"
-              }`}
-            >
-              <div className="space-y-0.5">
-                <span className="font-black text-base uppercase tracking-tight">
-                  Share profit
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {netProfit >= 0 ? (
-                    <TrendingUp size={14} className="text-emerald-600" />
-                  ) : (
-                    <TrendingDown size={14} className="text-red-650" />
-                  )}
-                  <div>
-                    <div className="text-xs font-bold">Branch PIC: 35%</div>
-                    <div className="text-xs font-bold">Surveyor: 35%</div>
-                    <div className="text-xs font-bold">Holding: 30%</div>
-                  </div>
+          </div>
+
+          {/* Holding */}
+          <div
+            className={`rounded-2xl border-2 p-6 space-y-3 ${
+              netProfit >= 0
+                ? "bg-green-50/60 border-green-200"
+                : "bg-zinc-50 border-zinc-200"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-100 rounded-xl">
+                  <Landmark size={18} className="text-green-700" />
                 </div>
+                <span className="font-bold text-sm text-zinc-800">Holding</span>
               </div>
-              <div className="text-right">
-                <span
-                  className={`text-2xl font-black tracking-tight ${
-                    netProfit >= 0 ? "text-emerald-800" : "text-red-750"
-                  }`}
-                >
-                  Rp {netProfit.toLocaleString("id-ID")}
-                </span>
-              </div>
+              <span className="text-xs font-black text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                30%
+              </span>
+            </div>
+            <div>
+              <span
+                className={`text-2xl font-black tracking-tight ${
+                  netProfit >= 0 ? "text-green-800" : "text-zinc-500"
+                }`}
+              >
+                {formatRp(shareProfitHolding)}
+              </span>
+              <p className="text-[10px] text-zinc-400 mt-0.5">
+                30% × {formatRp(netProfit)}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Analytical breakdown and Visualizations */}
-        {/* <div className="lg:col-span-2 space-y-6">
-          {/* Visual Segmented Progress Bar */}
-        {/* <div className="bg-white border border-zinc-200 shadow-sm rounded-2xl p-6 space-y-4">
+        {/* Summary bar */}
+        {netProfit > 0 && (
+          <div className="mt-5 bg-white border border-zinc-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <PieChart size={16} className="text-zinc-500" />
-              <h3 className="font-bold text-sm text-zinc-950 tracking-tight">
-                Alokasi Pendapatan
-              </h3>
+              <Percent size={15} className="text-zinc-500" />
+              <span className="text-xs font-bold text-zinc-600 uppercase tracking-wide">
+                Alokasi Share Profit
+              </span>
             </div>
-
-            {omset > 0 ? (
-              <div className="space-y-4">
-                <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden flex">
-                  <div
-                    className="bg-red-500 h-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(100, Math.max(0, (opex / omset) * 100))}%`,
-                    }}
-                    title={`Capex: ${((opex / omset) * 100).toFixed(1)}%`}
-                  />
-                  <div
-                    className="bg-red-500 h-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(100, Math.max(0, (opex / omset) * 100))}%`,
-                    }}
-                    title={`Opex: ${((opex / omset) * 100).toFixed(1)}%`}
-                  />
-                  <div
-                    className="bg-emerald-500 h-full transition-all duration-500 flex-1"
-                    style={{
-                      width: `${Math.min(100, Math.max(0, (netProfit / omset) * 100))}%`,
-                    }}
-                    title={`Net Profit: ${((netProfit / omset) * 100).toFixed(1)}%`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-[10px] font-semibold">
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-red-500" />
-                    <span>Capex ({((opex / omset) * 100).toFixed(1)}%)</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-red-500" />
-                    <span>Opex ({((opex / omset) * 100).toFixed(1)}%)</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <span>
-                      Net Profit ({((netProfit / omset) * 100).toFixed(1)}%)
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-zinc-400 italic">
-                Masukkan atau filter data leads untuk memicu diagram alokasi.
-              </p>
-            )}
-          </div> */}
-
-        {/* Expense Breakdown Card */}
-        {/* <div className="bg-white border border-zinc-200 shadow-sm rounded-2xl p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 size={19} className="text-zinc-500" />
-            <h3 className="font-bold text-sm text-zinc-950 tracking-tight">
-              Rincian Opex Kategori
-            </h3>
+            <div className="w-full sm:w-2/3 h-3 bg-zinc-100 rounded-full overflow-hidden flex">
+              <div
+                className="bg-blue-500 h-full transition-all"
+                style={{ width: "35%" }}
+                title="Branch PIC 35%"
+              />
+              <div
+                className="bg-violet-500 h-full transition-all"
+                style={{ width: "35%" }}
+                title="Surveyor 35%"
+              />
+              <div
+                className="bg-green-300 h-full transition-all"
+                style={{ width: "30%" }}
+                title="Holding 30%"
+              />
+            </div>
+            <div className="flex items-center gap-3 text-[10px] font-semibold">
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
+                Branch PIC
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-violet-500 inline-block" />
+                Surveyor
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-green-500 inline-block" />
+                Holding
+              </span>
+            </div>
           </div>
-
-          {sortedExpenseCategories.length === 0 ? (
-            <p className="text-xs text-zinc-400 italic">
-              Tidak ada pengeluaran operasional terdaftar untuk periode/cabang
-              ini.
-            </p>
-          ) : (
-            <div className="space-y-3.5">
-              {sortedExpenseCategories.map((cat) => {
-                const percent = opex > 0 ? (cat.amount / opex) * 100 : 0;
-                return (
-                  <div key={cat.name} className="space-y-1">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span className="text-zinc-700">{cat.name}</span>
-                      <span className="font-bold text-zinc-950">
-                        Rp {cat.amount.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full bg-zinc-250 rounded-full overflow-hidden">
-                      <div
-                        className="bg-zinc-800 h-full rounded-full transition-all duration-300"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div> */}
+        )}
       </div>
     </div>
-    // </div>
   );
 }

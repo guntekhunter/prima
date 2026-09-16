@@ -8,6 +8,7 @@ import {
   getLeads,
   getPlatform,
   getStatus,
+  getInvoices,
 } from "@/app/fetch/get/fetch";
 import { createLead } from "@/app/fetch/add/fetch";
 import { deleteLead } from "@/app/fetch/delete/fetch";
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [statuses, setStatuses] = useState<StatusOption[]>([]);
   const [platforms, setPlatforms] = useState<PlatformOption[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
@@ -65,10 +67,12 @@ export default function Dashboard() {
 
         setUser(user);
 
-        const [branchesRes, statusRes, platformRes] = await Promise.all([
+        const [branchesRes, statusRes, platformRes, invoicesRes, leadsRes] = await Promise.all([
           getBranch(),
           getStatus(),
           getPlatform(),
+          getInvoices(),
+          getLeads()
         ]);
 
         console.log("branchesRes", branchesRes);
@@ -78,8 +82,7 @@ export default function Dashboard() {
         setBranches(branchesRes?.data || []);
         setStatuses(statusRes?.data || []);
         setPlatforms(platformRes?.data || []);
-
-        const leadsRes = await getLeads();
+        setInvoices(invoicesRes || []);
         setLeads(leadsRes || []);
       } catch (err) {
         console.error("Error initializing dashboard:", err);
@@ -209,14 +212,14 @@ export default function Dashboard() {
 
   // Stats Calculations
   const totalLeads = filteredLeads.length;
-  const closingLeads = filteredLeads.filter(
-    (l) => l.status?.name?.toLowerCase() === "closing",
-  );
-  const totalOmset = closingLeads.reduce((sum, l) => sum + (l.nominal || 0), 0);
-  const averageNominal =
-    totalLeads > 0
-      ? filteredLeads.reduce((sum, l) => sum + (l.nominal || 0), 0) / totalLeads
-      : 0;
+  // Total Omset is now total nominal of all filtered leads (not just closing)
+  const totalOmset = filteredLeads.reduce((sum, l) => sum + (l.nominal || 0), 0);
+
+  // Total Margin: filter invoices based on filtered leads, then sum their margins
+  const filteredLeadIds = new Set(filteredLeads.map((l) => String(l.id)));
+  const totalMargin = invoices
+    .filter((inv) => filteredLeadIds.has(String(inv.lead_id)))
+    .reduce((sum, inv) => sum + (inv.margin || 0), 0);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-16">
@@ -284,10 +287,10 @@ export default function Dashboard() {
         <div className="bg-white border border-zinc-200 shadow-sm rounded-2xl p-6 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              Rata-rata Nominal
+              Margin
             </span>
             <h3 className="text-2xl font-black text-zinc-950 tracking-tight">
-              Rp {Math.round(averageNominal).toLocaleString("id-ID")}
+              Rp {totalMargin.toLocaleString("id-ID")}
             </h3>
           </div>
           <div className="h-10 w-10 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-zinc-500">

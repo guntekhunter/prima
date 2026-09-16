@@ -62,6 +62,23 @@ export const getExpenses = async () => {
   }
 };
 
+export const getInvoices = async () => {
+  try {
+    const res = await axios.get("/api/get/invoices");
+    return res.data as {
+      id: string;
+      margin: number;
+      total_prize: number;
+      created_at: string;
+      lead_id: string;
+      leads: { branch_id: string } | null;
+    }[];
+  } catch (error) {
+    console.log("Failed to fetch invoices", error);
+    return [];
+  }
+};
+
 export const getInvoiceCategories = async () => {
   try {
     const res = await axios.get("/api/get/invoice_categories");
