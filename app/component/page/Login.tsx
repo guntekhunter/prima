@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 export default function Login() {
   const router = useRouter();
@@ -29,11 +30,9 @@ export default function Login() {
     <div className="min-h-screen grid lg:grid-cols-2">
       <div className="hidden lg:flex bg-[#86986A] items-center justify-center">
         <div className="max-w-md text-white">
-          <h1 className="text-5xl font-bold mb-4">CRM Dashboard</h1>
-
-          <p className="text-lg opacity-90">
-            Track leads, customers, sales, and branch performance in one place.
-          </p>
+          <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
+            <Image alt="" src="/logo.png" width={200} height={200}></Image>
+          </span>
         </div>
       </div>
 
@@ -62,7 +61,7 @@ export default function Login() {
 
             <button
               onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+              className="w-full bg-[#86986A] text-white py-3 rounded-lg hover:bg-[#98b16e]"
             >
               Login
             </button>

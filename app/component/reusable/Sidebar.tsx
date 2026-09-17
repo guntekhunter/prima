@@ -104,10 +104,15 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white border-b border-zinc-200 shadow-sm flex items-center justify-between px-4 print:hidden">
         {/* Brand */}
         <span className="font-semibold text-base tracking-tight text-zinc-950 flex items-center gap-2">
-          <span className="h-6 w-6 rounded-lg bg-zinc-900 flex items-center justify-center text-white text-xs font-bold">
-            P
+          <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2 pl-[.5rem]">
+            <Image
+              alt=""
+              src="/logo.png"
+              width={200}
+              height={200}
+              className="w-[4rem]"
+            ></Image>
           </span>
-          Prima
         </span>
 
         {/* Hamburger */}
@@ -223,10 +228,13 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between p-4 border-b border-zinc-100">
           {!collapsed && (
             <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
-              <span className="h-6 w-6 rounded-lg bg-zinc-900 flex items-center justify-center text-white text-xs font-bold">
-                P
-              </span>
-              Prima
+              <Image
+                alt=""
+                src="/logo.png"
+                width={200}
+                height={200}
+                className="w-[5rem]"
+              ></Image>
             </span>
           )}
           <button
