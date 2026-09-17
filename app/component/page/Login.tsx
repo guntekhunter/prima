@@ -27,7 +27,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="min-h-screen grid lg:grid-cols-2 text-black">
       <div className="hidden lg:flex bg-[#86986A] items-center justify-center">
         <div className="max-w-md text-white">
           <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
@@ -42,7 +42,7 @@ export default function Login() {
 
           <p className="text-gray-500 mb-8">Login to continue</p>
 
-          <div className="space-y-4">
+          <div className="space-y-4 text-gray-500">
             <input
               type="email"
               placeholder="Email"
