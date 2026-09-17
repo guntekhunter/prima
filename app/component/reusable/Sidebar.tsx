@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/lib/supabase";
 
 import axios from "axios";
+import Image from "next/image";
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -41,13 +42,19 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
         const res = await axios.post("/api/auth/me", { userId: user.id });
         const profile = res.data?.profile;
-        
-        const roleName = (profile?.roles as any)?.name?.toLowerCase() || (profile?.roles as any[])?.[0]?.name?.toLowerCase() || profile?.role?.toLowerCase() || "";
+
+        const roleName =
+          (profile?.roles as any)?.name?.toLowerCase() ||
+          (profile?.roles as any[])?.[0]?.name?.toLowerCase() ||
+          profile?.role?.toLowerCase() ||
+          "";
         setUserRole(roleName);
 
         // Super admin sees everything. Others see restricted items.
@@ -70,7 +77,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         console.error("Failed to load profile for sidebar", err);
       }
     }
-    
+
     if (!isAuthPage) {
       loadProfile();
     }
@@ -141,10 +148,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         {/* Drawer header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-100">
           <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
-            <span className="h-6 w-6 rounded-lg bg-zinc-900 flex items-center justify-center text-white text-xs font-bold">
-              P
-            </span>
-            Prima
+            <Image alt="" src="/Logo.png" width={200} height={200}></Image>
           </span>
           <button
             onClick={() => setMobileOpen(false)}

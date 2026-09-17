@@ -10,8 +10,13 @@ import {
   Save,
   CheckCircle,
 } from "lucide-react";
-import { getBranch, getInvoiceCategories, getUnits } from "@/app/fetch/get/fetch";
+import {
+  getBranch,
+  getInvoiceCategories,
+  getUnits,
+} from "@/app/fetch/get/fetch";
 import axios from "axios";
+import Image from "next/image";
 
 type Branch = {
   id: string;
@@ -269,7 +274,7 @@ export default function InvoicePage() {
       const imgH = (imgHpx * pageW) / imgWpx;
 
       // Split across pages if needed
-      const img = new Image();
+      const img = new window.Image();
       await new Promise<void>((resolve) => {
         img.onload = () => resolve();
         img.src = imgData;
@@ -426,11 +431,13 @@ export default function InvoicePage() {
           <div className="flex flex-col md:flex-row justify-between gap-6 border-b border-zinc-150 pb-6 mb-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="h-8 w-8 rounded-lg bg-zinc-950 flex items-center justify-center text-white text-sm font-bold">
-                  P
-                </div>
-                <span className="font-bold text-xl tracking-tight text-zinc-950">
-                  PRIMA
+                <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
+                  <Image
+                    alt=""
+                    src="/Logo.png"
+                    width={200}
+                    height={200}
+                  ></Image>
                 </span>
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed max-w-xs">
@@ -604,7 +611,11 @@ export default function InvoicePage() {
                                 <select
                                   value={item.unit_id}
                                   onChange={(e) =>
-                                    updateItem(globalIndex, "unit_id", e.target.value)
+                                    updateItem(
+                                      globalIndex,
+                                      "unit_id",
+                                      e.target.value,
+                                    )
                                   }
                                   className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1 text-xs text-center"
                                 >
@@ -616,7 +627,8 @@ export default function InvoicePage() {
                                   ))}
                                 </select>
                                 <span className="print-only text-xs">
-                                  {units.find((u) => u.id === item.unit_id)?.name || ""}
+                                  {units.find((u) => u.id === item.unit_id)
+                                    ?.name || ""}
                                 </span>
                               </td>
                               <td className="py-2 px-3 text-right">
@@ -703,6 +715,13 @@ export default function InvoicePage() {
             )}
           </div>
 
+          <div>
+            <div className="flex justify-between border-zinc-200 pt-2 font-bold text-sm">
+              <span>Total Pengeluaran</span>
+              <span></span>
+              <span>Rp {subtotal.toLocaleString("id-ID")}</span>
+            </div>
+          </div>
           {/* margin card */}
           <div>
             <div className="flex justify-between border-zinc-200 pt-2 font-bold text-sm">

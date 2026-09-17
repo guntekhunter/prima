@@ -82,7 +82,11 @@ export const getInvoices = async () => {
 export const getInvoiceCategories = async () => {
   try {
     const res = await axios.get("/api/get/invoice_categories");
-    return res.data as { id: string; category_name: string }[];
+    return res.data as {
+      id: string;
+      category_name: string;
+      position: number;
+    }[];
   } catch (error) {
     console.log("Failed to fetch invoice categories", error);
     return [];
