@@ -571,7 +571,7 @@ export default function Report() {
           <h2 className="text-xl font-black text-zinc-950 tracking-tight font-sans">
             LAPORAN LABA RUGI
           </h2>
-          <p className="text-[10px] text-zinc-450 font-bold tracking-wider uppercase mt-1 leading-relaxed">
+          <p className="text-[10px] text-zinc-700 font-bold tracking-wider uppercase mt-1 leading-relaxed">
             Periode:{" "}
             {timeFilterType === "all"
               ? "Semua Waktu (Akumulasi)"
@@ -820,7 +820,7 @@ export default function Report() {
               />
             </div>
             <div className="flex items-center gap-3 text-[10px] font-semibold">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-zinc-700">
                 <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
                 Branch PIC
               </span>

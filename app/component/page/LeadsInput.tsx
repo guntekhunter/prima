@@ -251,7 +251,7 @@ export default function Dashboard() {
             Project Costing
           </h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="items-center gap-4 md:grid md:grid-cols-3 grid grid-cols-2">
           <select
             value={filterBranch}
             onChange={(e) => setFilterBranch(e.target.value)}
@@ -368,7 +368,7 @@ export default function Dashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-zinc-700">
                 {/* Input Row */}
                 <tr className="divide-x divide-zinc-300 bg-white">
                   <td className="p-0">

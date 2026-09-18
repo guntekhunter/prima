@@ -119,7 +119,7 @@ export default function RegisterPage() {
 
   if (pageLoading) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm font-medium text-zinc-500">
+      <div className="flex h-64 items-center justify-center text-sm font-medium text-zinc-700">
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="h-8 w-8 animate-spin text-zinc-950" />
           <span>Memuat form pendaftaran...</span>
@@ -136,13 +136,13 @@ export default function RegisterPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950 font-sans">
             Tambah Staf / Pengguna
           </h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-sm text-zinc-700 mt-1">
             Daftarkan akun staf baru dan tentukan penugasan cabang serta
             perannya.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold shadow-sm">
-          <Shield size={14} className="text-zinc-500" />
+          <Shield size={14} className="text-zinc-700" />
           <span>Administrator Only</span>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister} className="space-y-6">
           {/* Full Name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
               <User size={14} className="text-zinc-400" />
               Nama Lengkap (Full Name)
             </label>
@@ -183,7 +183,7 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
               <Mail size={14} className="text-zinc-400" />
               Alamat Email (Email Address)
             </label>
@@ -199,7 +199,7 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
               <Lock size={14} className="text-zinc-400" />
               Kata Sandi (Password)
             </label>
@@ -225,7 +225,7 @@ export default function RegisterPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Branch */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
                 <Building size={14} className="text-zinc-400" />
                 Penugasan Cabang (Branch)
               </label>
@@ -246,7 +246,7 @@ export default function RegisterPage() {
 
             {/* Role */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
                 <Shield size={14} className="text-zinc-400" />
                 Peran / Hak Akses (Role)
               </label>
