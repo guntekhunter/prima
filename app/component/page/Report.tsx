@@ -432,7 +432,7 @@ export default function Report() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16 text-zinc-850">
+    <div className="max-w-7xl mx-auto space-y-8 pb-16 text-black">
       {/* Title Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-5">
         <div>
@@ -444,7 +444,7 @@ export default function Report() {
           </p>
         </div>
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold shadow-sm">
-          <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse text-gray-800" />
+          <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse text-zinc-800" />
           <span>Data Real-time Sistem</span>
         </div>
       </div>
