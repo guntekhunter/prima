@@ -6,7 +6,9 @@ const PUBLIC_PATHS = ["/", "/register"];
 
 export async function proxy(req: NextRequest) {
     let response = NextResponse.next({
-        request: req,
+        request: {
+            headers: req.headers,
+        },
     });
 
     const supabase = createServerClient(

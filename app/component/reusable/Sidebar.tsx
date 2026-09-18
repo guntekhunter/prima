@@ -105,13 +105,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         {/* Brand */}
         <span className="font-semibold text-base tracking-tight text-zinc-950 flex items-center gap-2">
           <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2 pl-[.5rem]">
-            <Image
-              alt=""
-              src="/logo.png"
-              width={200}
-              height={200}
-              className="w-[4rem]"
-            ></Image>
+            <Image alt="" src="/Logo.png" width={200} height={200} priority style={{ height: "auto" }} className="w-[4rem]"></Image>
           </span>
         </span>
 
@@ -153,7 +147,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         {/* Drawer header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-100">
           <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
-            <Image alt="" src="/Logo.png" width={200} height={200}></Image>
+            <Image alt="" src="/Logo.png" width={200} height={200} priority style={{ width: "auto", height: "auto" }}></Image>
           </span>
           <button
             onClick={() => setMobileOpen(false)}
@@ -228,13 +222,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between p-4 border-b border-zinc-100">
           {!collapsed && (
             <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
-              <Image
-                alt=""
-                src="/logo.png"
-                width={200}
-                height={200}
-                className="w-[5rem]"
-              ></Image>
+              <Image alt="" src="/Logo.png" width={200} height={200} priority style={{ height: "auto" }} className="w-[5rem]"></Image>
             </span>
           )}
           <button

@@ -389,7 +389,7 @@ export default function Report() {
 
   // Find branches that have margin in the current filtered period
   const branchesWithMargin = new Set();
-  filteredInvoices.forEach(inv => {
+  filteredInvoices.forEach((inv) => {
     if ((inv.margin || 0) > 0 && inv.leads?.branch_id) {
       branchesWithMargin.add(inv.leads.branch_id);
     }
@@ -444,7 +444,7 @@ export default function Report() {
           </p>
         </div>
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold shadow-sm">
-          <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+          <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse text-gray-800" />
           <span>Data Real-time Sistem</span>
         </div>
       </div>
@@ -708,7 +708,9 @@ export default function Report() {
             <div>
               <span
                 className={`text-2xl font-black tracking-tight ${
-                  finalShareProfitBranchPIC >= 0 ? "text-blue-800" : "text-red-600"
+                  finalShareProfitBranchPIC >= 0
+                    ? "text-blue-800"
+                    : "text-red-600"
                 }`}
               >
                 {formatRp(finalShareProfitBranchPIC)}

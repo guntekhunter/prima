@@ -31,7 +31,7 @@ export default function Login() {
       <div className="hidden lg:flex bg-[#86986A] items-center justify-center">
         <div className="max-w-md text-white">
           <span className="font-semibold text-lg tracking-tight text-zinc-950 flex items-center gap-2">
-            <Image alt="" src="/logo.png" width={200} height={200}></Image>
+            <Image alt="" src="/logo.png" width={200} height={200} priority style={{ width: "auto", height: "auto" }}></Image>
           </span>
         </div>
       </div>

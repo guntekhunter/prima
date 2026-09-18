@@ -69,7 +69,11 @@ export default function Dashboard() {
         try {
           const res = await axios.post("/api/auth/me", { userId: user.id });
           const profile = res.data?.profile;
-          const roleName = (profile?.roles as any)?.name?.toLowerCase() || (profile?.roles as any[])?.[0]?.name?.toLowerCase() || profile?.role?.toLowerCase() || "";
+          const roleName =
+            (profile?.roles as any)?.name?.toLowerCase() ||
+            (profile?.roles as any[])?.[0]?.name?.toLowerCase() ||
+            profile?.role?.toLowerCase() ||
+            "";
           if (!roleName.includes("super")) {
             router.push("/report");
             return;
@@ -80,13 +84,14 @@ export default function Dashboard() {
 
         setUser(user);
 
-        const [branchesRes, statusRes, platformRes, invoicesRes, leadsRes] = await Promise.all([
-          getBranch(),
-          getStatus(),
-          getPlatform(),
-          getInvoices(),
-          getLeads()
-        ]);
+        const [branchesRes, statusRes, platformRes, invoicesRes, leadsRes] =
+          await Promise.all([
+            getBranch(),
+            getStatus(),
+            getPlatform(),
+            getInvoices(),
+            getLeads(),
+          ]);
 
         console.log("branchesRes", branchesRes);
         console.log("statusRes", statusRes);
@@ -226,7 +231,10 @@ export default function Dashboard() {
   // Stats Calculations
   const totalLeads = filteredLeads.length;
   // Total Omset is now total nominal of all filtered leads (not just closing)
-  const totalOmset = filteredLeads.reduce((sum, l) => sum + (l.nominal || 0), 0);
+  const totalOmset = filteredLeads.reduce(
+    (sum, l) => sum + (l.nominal || 0),
+    0,
+  );
 
   // Total Margin: filter invoices based on filtered leads, then sum their margins
   const filteredLeadIds = new Set(filteredLeads.map((l) => String(l.id)));
@@ -237,7 +245,7 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-16">
       {/* Title Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-5 text-gray-800">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950">
             Project Costing
@@ -251,7 +259,9 @@ export default function Dashboard() {
           >
             <option value="">All Branches</option>
             {branches.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
             ))}
           </select>
           <input
