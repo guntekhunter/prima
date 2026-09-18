@@ -84,7 +84,9 @@ export default function CashAdvance() {
     setSuccessMessage("");
 
     if (!selectedUserId || nominal === "" || nominal <= 0 || !ket) {
-      setErrorMessage("Semua field wajib diisi dan nominal harus lebih dari 0.");
+      setErrorMessage(
+        "Semua field wajib diisi dan nominal harus lebih dari 0.",
+      );
       return;
     }
 
@@ -106,7 +108,7 @@ export default function CashAdvance() {
       setKet("");
     } catch (err: any) {
       setErrorMessage(
-        err.response?.data?.error || "Gagal menyimpan cash advance."
+        err.response?.data?.error || "Gagal menyimpan cash advance.",
       );
     } finally {
       setSubmitting(false);
@@ -133,7 +135,7 @@ export default function CashAdvance() {
 
   const totalNominal = filteredRecords.reduce(
     (sum, rec) => sum + (rec.nominal || 0),
-    0
+    0,
   );
 
   const formatRp = (val: number) => `Rp ${val.toLocaleString("id-ID")}`;
@@ -155,7 +157,7 @@ export default function CashAdvance() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16">
+    <div className="max-w-7xl mx-auto space-y-8 pb-16 text-black">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-5">
         <div>
@@ -192,7 +194,9 @@ export default function CashAdvance() {
             <h3 className="text-2xl font-black text-zinc-950 tracking-tight">
               {formatRp(totalNominal)}
             </h3>
-            <p className="text-[11px] text-zinc-400">{filteredRecords.length} record</p>
+            <p className="text-[11px] text-zinc-400">
+              {filteredRecords.length} record
+            </p>
           </div>
           <div className="h-10 w-10 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center">
             <Wallet size={18} className="text-zinc-500" />
@@ -220,8 +224,10 @@ export default function CashAdvance() {
           <Plus size={15} />
           Tambah Cash Advance
         </h2>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
           {/* Nama Pemohon (user dropdown) */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
@@ -331,7 +337,10 @@ export default function CashAdvance() {
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {filteredRecords.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-zinc-50/60 transition-colors">
+                  <tr
+                    key={rec.id}
+                    className="hover:bg-zinc-50/60 transition-colors"
+                  >
                     <td className="px-5 py-3 font-medium text-zinc-900">
                       {getUserName(rec)}
                     </td>
