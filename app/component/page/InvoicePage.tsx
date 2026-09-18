@@ -334,7 +334,7 @@ export default function InvoicePage() {
   const margin = (lead.nominal || 0) - subtotal;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-12 text-zinc-800">
+    <div className="max-w-6xl mx-auto space-y-6 pb-28 lg:pb-12 text-zinc-800">
       {/* CSS overrides for print */}
       <style>{`
         @media print {
@@ -401,12 +401,12 @@ export default function InvoicePage() {
 
         <div className="flex items-center gap-2">
           {isSaved ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[.5rem] font-semibold text-emerald-700 border border-emerald-200">
               <CheckCircle size={12} />
               Saved to Database
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200 animate-pulse">
+            <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[.5rem] font-semibold text-amber-700 border border-amber-200 animate-pulse">
               Unsaved Draft
             </span>
           )}
@@ -425,7 +425,7 @@ export default function InvoicePage() {
         {/* Invoice Card Sheet */}
         <div
           ref={invoiceRef}
-          className="lg:col-span-3 bg-white border border-zinc-200 shadow-xl rounded-2xl p-8 invoice-card"
+          className="lg:col-span-3 bg-white border border-zinc-200 shadow-xl rounded-2xl p-4 md:p-8 invoice-card"
         >
           {/* Top Invoice Branding */}
           <div className="flex flex-col md:flex-row justify-between gap-6 border-b border-zinc-150 pb-6 mb-6">
@@ -440,7 +440,7 @@ export default function InvoicePage() {
                   ></Image>
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 leading-relaxed max-w-xs">
+              <p className="text-[.5rem] text-zinc-500 leading-relaxed max-w-xs">
                 Prima Business and Consulting Inc.
                 <br />
                 Branch Office: {lead.branches?.name || "Main Branch"}
@@ -451,13 +451,13 @@ export default function InvoicePage() {
               <h2 className="font-extrabold text-2xl tracking-tight text-zinc-900">
                 INVOICE
               </h2>
-              <div className="text-xs text-zinc-600">
+              <div className="text-[.5rem] text-zinc-600">
                 <span className="font-medium text-zinc-400">Invoice No:</span>{" "}
                 <span className="font-semibold text-zinc-850 bg-zinc-50 border border-zinc-200 rounded px-2 py-1 select-all">
                   {invoiceNumber}
                 </span>
               </div>
-              <div className="text-xs text-zinc-600">
+              <div className="text-[.5rem] text-zinc-600">
                 <span className="font-medium text-zinc-400">Date:</span>{" "}
                 {createdAt}
               </div>
@@ -465,7 +465,7 @@ export default function InvoicePage() {
           </div>
 
           {/* Client & Billing Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-sm">
             <div>
               <h3 className="font-semibold text-zinc-400 uppercase tracking-wider mb-2">
                 Billed To
@@ -491,7 +491,7 @@ export default function InvoicePage() {
             </div>
           </div>
 
-          <div className="py-5 text-xs">
+          <div className="py-5 text-[.5rem]">
             <div className="flex">
               <span>Total Nilai Proyek: </span>
               <span>Rp {(lead.nominal || 0).toLocaleString("id-ID")}</span>
@@ -499,17 +499,13 @@ export default function InvoicePage() {
           </div>
 
           {/* Invoice Items Table — grouped by category */}
-          <div
-            className={
-              downloading ? "mb-6 overflow-visible" : "overflow-x-auto mb-6"
-            }
-          >
+          <div className={downloading ? "mb-6 overflow-visible" : "mb-6"}>
             {categories.length === 0 ? (
-              <div className="text-xs text-zinc-400 py-6 text-center">
+              <div className="text-[.5rem] text-zinc-400 py-6 text-center">
                 No invoice categories found.
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 text-[.5rem]">
                 {categories.map((category) => {
                   const categoryItems = items
                     .map((item, globalIndex) => ({ item, globalIndex }))
@@ -518,11 +514,11 @@ export default function InvoicePage() {
                   return (
                     <div
                       key={category.id}
-                      className="rounded-xl border border-zinc-200 overflow-hidden"
+                      className="rounded-xl border border-zinc-200 text-[.5rem]"
                     >
                       {/* Category Header */}
-                      <div className="bg-zinc-50 border-b border-zinc-200 px-4 py-2 flex items-center justify-between">
-                        <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                      <div className="bg-zinc-50 border-b border-zinc-200 px-4 py-2 flex items-center justify-between rounded-t-xl">
+                        <span className="text-[.5rem] font-bold text-zinc-700 uppercase tracking-wider">
                           {category.category_name}
                         </span>
                         {categoryItems.length > 0 && (
@@ -534,180 +530,189 @@ export default function InvoicePage() {
                       </div>
 
                       {/* Items Table */}
-                      <table className="w-full border-collapse text-left text-xs">
-                        <thead>
-                          <tr className="border-b border-zinc-200 text-zinc-400 uppercase font-semibold">
-                            <th className="py-2 px-3 w-[14%]">Code</th>
-                            <th className="py-2 px-3 w-[30%]">
-                              Product / Service Name
-                            </th>
-                            <th className="py-2 px-3 w-[8%] text-center">
-                              Qty
-                            </th>
-                            <th className="py-2 px-3 w-[12%] text-center">
-                              Unit
-                            </th>
-                            <th className="py-2 px-3 w-[14%] text-right">
-                              Price
-                            </th>
-                            <th className="py-2 px-3 w-[14%] text-right">
-                              Total
-                            </th>
-                            <th className="py-2 px-3 w-[5%] text-center delete-header no-print"></th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                          {categoryItems.map(({ item, globalIndex }) => (
-                            <tr
-                              key={globalIndex}
-                              className="hover:bg-zinc-50/50"
-                            >
-                              <td className="py-2 px-3">
-                                <input
-                                  type="text"
-                                  value={item.product_code}
-                                  onChange={(e) =>
-                                    updateItem(
-                                      globalIndex,
-                                      "product_code",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="e.g. PRD-01"
-                                  className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
-                                />
+                      <div
+                        className={
+                          downloading ? "overflow-visible" : "overflow-x-auto"
+                        }
+                      >
+                        <table className="w-full border-collapse text-left text-[.5rem]">
+                          <thead>
+                            <tr className="border-b border-zinc-200 text-zinc-400 uppercase font-semibold">
+                              <th className="py-2 px-2 min-w-[60px]">Code</th>
+                              <th className="py-2 px-2 min-w-[160px]">
+                                Product / Service Name
+                              </th>
+                              <th className="py-2 px-2 min-w-[50px] text-center">
+                                Qty
+                              </th>
+                              <th className="py-2 px-2 min-w-[90px] text-center">
+                                Unit
+                              </th>
+                              <th className="py-2 px-2 min-w-[110px] text-right">
+                                Price
+                              </th>
+                              <th className="py-2 px-2 min-w-[110px] text-right">
+                                Total
+                              </th>
+                              <th className="py-2 px-2 min-w-[40px] text-center delete-header no-print"></th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-100">
+                            {categoryItems.map(({ item, globalIndex }) => (
+                              <tr
+                                key={globalIndex}
+                                className="hover:bg-zinc-50/50"
+                              >
+                                <td className="py-2 px-3">
+                                  <input
+                                    type="text"
+                                    value={item.product_code}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        globalIndex,
+                                        "product_code",
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="e.g. PRD-01"
+                                    className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
+                                  />
+                                </td>
+                                <td className="py-2 px-3">
+                                  <input
+                                    type="text"
+                                    value={item.product_name}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        globalIndex,
+                                        "product_name",
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="Product Description"
+                                    className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={item.qty}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        globalIndex,
+                                        "qty",
+                                        Number(e.target.value),
+                                      )
+                                    }
+                                    className="w-full text-center bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-center no-print">
+                                  <select
+                                    value={item.unit_id}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        globalIndex,
+                                        "unit_id",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1 text-[.5rem] text-center"
+                                  >
+                                    <option value="">— Unit —</option>
+                                    {units.map((u) => (
+                                      <option key={u.id} value={u.id}>
+                                        {u.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <span className="print-only text-[.5rem]">
+                                    {units.find((u) => u.id === item.unit_id)
+                                      ?.name || ""}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-right">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={item.prize}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        globalIndex,
+                                        "prize",
+                                        Number(e.target.value),
+                                      )
+                                    }
+                                    className="w-full text-right bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-right font-semibold text-zinc-900">
+                                  Rp {(item.total || 0).toLocaleString("id-ID")}
+                                </td>
+                                <td className="py-2 px-3 text-center delete-cell no-print">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeItem(globalIndex)}
+                                    className="text-zinc-400 hover:text-red-600 transition-colors p-2"
+                                    title="Remove Item"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                            <tr className="w-full">
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td className="py-2 px-3 text-right font-semibold">
+                                {(() => {
+                                  const categoryTotal = categoryItems.reduce(
+                                    (sum, { item }) => sum + (item.total || 0),
+                                    0,
+                                  );
+
+                                  const percentage =
+                                    lead.nominal > 0
+                                      ? (categoryTotal / lead.nominal) * 100
+                                      : 0;
+
+                                  return (
+                                    <div>
+                                      <div>
+                                        Rp{" "}
+                                        {categoryTotal.toLocaleString("id-ID")}
+                                      </div>
+                                      <div className="text-[.5rem] text-zinc-500">
+                                        {percentage.toFixed(2)}%
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                               </td>
-                              <td className="py-2 px-3">
-                                <input
-                                  type="text"
-                                  value={item.product_name}
-                                  onChange={(e) =>
-                                    updateItem(
-                                      globalIndex,
-                                      "product_name",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Product Description"
-                                  className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
-                                />
-                              </td>
-                              <td className="py-2 px-3 text-center">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={item.qty}
-                                  onChange={(e) =>
-                                    updateItem(
-                                      globalIndex,
-                                      "qty",
-                                      Number(e.target.value),
-                                    )
-                                  }
-                                  className="w-12 text-center bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
-                                />
-                              </td>
-                              <td className="py-2 px-3 text-center no-print">
-                                <select
-                                  value={item.unit_id}
-                                  onChange={(e) =>
-                                    updateItem(
-                                      globalIndex,
-                                      "unit_id",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-full bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1 text-xs text-center"
-                                >
-                                  <option value="">— Unit —</option>
-                                  {units.map((u) => (
-                                    <option key={u.id} value={u.id}>
-                                      {u.name}
-                                    </option>
-                                  ))}
-                                </select>
-                                <span className="print-only text-xs">
-                                  {units.find((u) => u.id === item.unit_id)
-                                    ?.name || ""}
-                                </span>
-                              </td>
-                              <td className="py-2 px-3 text-right">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={item.prize}
-                                  onChange={(e) =>
-                                    updateItem(
-                                      globalIndex,
-                                      "prize",
-                                      Number(e.target.value),
-                                    )
-                                  }
-                                  className="w-24 text-right bg-transparent border-b border-zinc-100 hover:border-zinc-300 focus:border-zinc-950 focus:outline-none py-1"
-                                />
-                              </td>
-                              <td className="py-2 px-3 text-right font-semibold text-zinc-900">
-                                Rp {(item.total || 0).toLocaleString("id-ID")}
-                              </td>
-                              <td className="py-2 px-3 text-center delete-cell no-print">
+                            </tr>
+
+                            {/* Add Item Row for this category */}
+                            <tr className="add-item-row no-print bg-zinc-50/30">
+                              <td colSpan={6} className="py-2.5 px-3">
                                 <button
                                   type="button"
-                                  onClick={() => removeItem(globalIndex)}
-                                  className="text-zinc-400 hover:text-red-600 transition-colors p-1"
-                                  title="Remove Item"
+                                  onClick={() =>
+                                    addItemForCategory(category.id)
+                                  }
+                                  className="flex items-center gap-1.5 text-[.5rem] text-zinc-500 hover:text-zinc-950 font-semibold transition-colors w-full p-2"
                                 >
-                                  <Trash2 size={14} />
+                                  <Plus size={13} />
+                                  Add item under {category.category_name}
                                 </button>
                               </td>
                             </tr>
-                          ))}
-                          <tr className="w-full">
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td className="py-2 px-3 text-right font-semibold">
-                              {(() => {
-                                const categoryTotal = categoryItems.reduce(
-                                  (sum, { item }) => sum + (item.total || 0),
-                                  0,
-                                );
-
-                                const percentage =
-                                  lead.nominal > 0
-                                    ? (categoryTotal / lead.nominal) * 100
-                                    : 0;
-
-                                return (
-                                  <div>
-                                    <div>
-                                      Rp {categoryTotal.toLocaleString("id-ID")}
-                                    </div>
-                                    <div className="text-xs text-zinc-500">
-                                      {percentage.toFixed(2)}%
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                            </td>
-                          </tr>
-
-                          {/* Add Item Row for this category */}
-                          <tr className="add-item-row no-print bg-zinc-50/30">
-                            <td colSpan={6} className="py-2.5 px-3">
-                              <button
-                                type="button"
-                                onClick={() => addItemForCategory(category.id)}
-                                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-950 font-semibold transition-colors"
-                              >
-                                <Plus size={13} />
-                                Add item under {category.category_name}
-                              </button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   );
                 })}
@@ -744,7 +749,7 @@ export default function InvoicePage() {
               <p>Thank you for choosing Prima Inc. We value your business!</p>
             </div>
 
-            <div className="w-full md:w-64 space-y-2 text-xs">
+            <div className="w-full md:w-64 space-y-2 text-[.5rem]">
               <div className="flex justify-between text-zinc-500">
                 <span>Subtotal</span>
                 <span>Rp {subtotal.toLocaleString("id-ID")}</span>
@@ -762,28 +767,28 @@ export default function InvoicePage() {
         </div>
 
         {/* Action Panel Side Panel */}
-        <div className="space-y-4 no-print actions-panel">
-          <div className="bg-white border border-zinc-200 shadow-lg rounded-2xl p-5 space-y-4">
-            <h3 className="font-bold text-sm text-zinc-950 tracking-tight">
+        <div className="no-print actions-panel fixed bottom-0 left-0 w-full bg-white border-t border-zinc-200 z-50 p-4 lg:static lg:block lg:w-auto lg:bg-transparent lg:border-none lg:z-auto lg:p-0">
+          <div className="bg-white lg:border lg:border-zinc-200 lg:shadow-lg rounded-2xl lg:p-5 flex gap-3 lg:flex-col">
+            <h3 className="hidden lg:block font-bold text-sm text-zinc-950 tracking-tight">
               Invoice Actions
             </h3>
 
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-950 hover:bg-zinc-900 text-white rounded-xl text-xs font-semibold shadow-sm hover:shadow transition-all disabled:opacity-50 cursor-pointer"
+              className="flex-1 lg:w-full flex items-center justify-center gap-2 py-3 lg:py-2.5 px-4 bg-zinc-950 hover:bg-zinc-900 text-white rounded-xl text-sm lg:text-[.5rem] font-semibold shadow-sm hover:shadow transition-all disabled:opacity-50 cursor-pointer m-0"
             >
-              <Save size={14} />
-              {saving ? "Saving..." : "Save Invoice"}
+              <Save size={16} className="lg:w-3.5 lg:h-3.5" />
+              {saving ? "Saving..." : "Save"}
             </button>
 
             <button
               onClick={handleDownloadPdf}
               disabled={downloading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+              className="flex-1 lg:w-full flex items-center justify-center gap-2 py-3 lg:py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-xl text-sm lg:text-[.5rem] font-semibold transition-all cursor-pointer disabled:opacity-50 m-0"
             >
-              <FileDown size={14} />
-              {downloading ? "Generating PDF..." : "Download PDF"}
+              <FileDown size={16} className="lg:w-3.5 lg:h-3.5" />
+              {downloading ? "Generating..." : "Download"}
             </button>
           </div>
         </div>
