@@ -770,7 +770,7 @@ export default function InvoicePage() {
         <div className="no-print actions-panel fixed bottom-0 left-0 w-full bg-white border-t border-zinc-200 z-50 p-4 lg:static lg:block lg:w-auto lg:bg-transparent lg:border-none lg:z-auto lg:p-0">
           <div className="bg-white lg:border lg:border-zinc-200 lg:shadow-lg rounded-2xl lg:p-5 flex gap-3 lg:flex-col">
             <h3 className="hidden lg:block font-bold text-sm text-zinc-950 tracking-tight">
-              Invoice Actions
+              Actions
             </h3>
 
             <button
