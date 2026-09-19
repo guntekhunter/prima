@@ -569,7 +569,7 @@ export default function Dashboard() {
                           }
                           className="px-1.5 py-0.5 rounded text-[.6rem] font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 cursor-pointer whitespace-nowrap"
                         >
-                          Invoice
+                          RAB
                         </button>
                         <button
                           type="button"
