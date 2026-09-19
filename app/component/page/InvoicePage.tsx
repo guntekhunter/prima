@@ -449,10 +449,10 @@ export default function InvoicePage() {
 
             <div className="md:text-right space-y-1">
               <h2 className="font-extrabold text-2xl tracking-tight text-zinc-900">
-                INVOICE
+                RAB Internal
               </h2>
               <div className="text-[.5rem] text-zinc-600">
-                <span className="font-medium text-zinc-400">Invoice No:</span>{" "}
+                <span className="font-medium text-zinc-400">RAB No:</span>{" "}
                 <span className="font-semibold text-zinc-850 bg-zinc-50 border border-zinc-200 rounded px-2 py-1 select-all">
                   {invoiceNumber}
                 </span>
