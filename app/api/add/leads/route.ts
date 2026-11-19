@@ -119,20 +119,34 @@ export async function POST(req: Request) {
         .eq("id", existingInvoice.id);
 
       if (invoiceUpdateError) {
-        console.error("Error updating invoice total_prize:", invoiceUpdateError);
+        console.error(
+          "Error updating invoice total_prize:",
+          invoiceUpdateError,
+        );
       }
     } else {
-      const { error: invoiceInsertError } = await supabase
-        .from("invoices")
-        .insert({
-          lead_id: data.id,
-          costumer_id: customerId,
-          invoice_number: `INV-${data.id}`,
-          total_prize: nominal,
-        });
+      // Hitung total data leads
+      const { count, error: countError } = await supabase
+        .from("leads")
+        .select("*", { count: "exact", head: true });
 
-      if (invoiceInsertError) {
-        console.error("Error inserting invoice total_prize:", invoiceInsertError);
+      if (countError) {
+        console.error("Error counting leads:", countError);
+      } else {
+        const invoiceNumber = `INV-${String(count ?? 0).padStart(6, "0")}`;
+
+        const { error: invoiceInsertError } = await supabase
+          .from("invoices")
+          .insert({
+            lead_id: data.id,
+            costumer_id: customerId,
+            invoice_number: invoiceNumber,
+            total_prize: nominal,
+          });
+
+        if (invoiceInsertError) {
+          console.error("Error inserting invoice:", invoiceInsertError);
+        }
       }
     }
 

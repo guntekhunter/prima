@@ -33,7 +33,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   );
 
   const [menuItems, setMenuItems] = useState([
-    { name: "Project Costing", href: "/leads-input", icon: Home },
+    { name: "Project", href: "/leads-input", icon: Home },
     { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
     { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
     { name: "Tambah Pengguna", href: "/register", icon: User },
@@ -61,7 +61,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         if (roleName.includes("super")) {
           // Keep all items
           setMenuItems([
-            { name: "Project Costing", href: "/leads-input", icon: Home },
+            { name: "Project", href: "/leads-input", icon: Home },
             { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
             { name: "Cash Advance", href: "/cash-advance", icon: Wallet },
             { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
@@ -70,7 +70,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         } else {
           // Only Report for surveyor, branch PIC, etc.
           setMenuItems([
-            { name: "Project Costing", href: "/leads-input", icon: Home },
+            { name: "Project", href: "/leads-input", icon: Home },
             { name: "Cash Advance", href: "/cash-advance", icon: Wallet },
             { name: "Tambah Pengguna", href: "/register", icon: User },
           ]);
