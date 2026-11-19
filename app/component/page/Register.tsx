@@ -56,10 +56,10 @@ export default function RegisterPage() {
             (profile?.roles as any[])?.[0]?.name?.toLowerCase() ||
             profile?.role?.toLowerCase() ||
             "";
-          if (!roleName.includes("super")) {
-            router.push("/report");
-            return;
-          }
+          // if (!roleName.includes("super")) {
+          //   router.push("/report");
+          //   return;
+          // }
         } catch (err) {
           console.error("Failed to load profile", err);
         }
