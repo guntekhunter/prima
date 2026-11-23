@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import {
@@ -14,7 +14,13 @@ import { createLead } from "@/app/fetch/add/fetch";
 import { deleteLead } from "@/app/fetch/delete/fetch";
 import { updateLead } from "@/app/fetch/update/fetch";
 import axios from "axios";
-import { Loader2, Users, TrendingUp, DollarSign, Layers } from "lucide-react";
+import {
+  Loader2,
+  Users,
+  TrendingUp,
+  DollarSign,
+  Layers,
+} from "lucide-react";
 
 type Branch = {
   id: string;
@@ -31,6 +37,31 @@ type PlatformOption = {
   name: string;
 };
 
+// Helper to format ISO timestamp to YYYY-MM-DD for date input
+const toDateInputValue = (dateStr?: string) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+// Format raw number to Indonesian money format with dot separator (e.g. 200000000 -> "200.000.000")
+const formatMoneyDisplay = (val: number | string | undefined | null): string => {
+  if (val === undefined || val === null || val === "") return "";
+  const numStr = String(val).replace(/\D/g, "");
+  if (!numStr) return "";
+  return new Intl.NumberFormat("id-ID").format(Number(numStr));
+};
+
+// Parse formatted money string back to raw integer for database
+const parseMoneyRaw = (val: string): number => {
+  const digitsOnly = val.replace(/\D/g, "");
+  return digitsOnly ? Number(digitsOnly) : 0;
+};
+
 export default function Dashboard() {
   const router = useRouter();
 
@@ -42,6 +73,8 @@ export default function Dashboard() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Form states
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [branchId, setBranchId] = useState("");
@@ -51,6 +84,7 @@ export default function Dashboard() {
   const [platformId, setPlatformId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Filters
   const [filterBranch, setFilterBranch] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
 
@@ -93,10 +127,6 @@ export default function Dashboard() {
             getLeads(),
           ]);
 
-        console.log("branchesRes", branchesRes);
-        console.log("statusRes", statusRes);
-        console.log("platformRes", platformRes);
-
         setBranches(branchesRes?.data || []);
         setStatuses(statusRes?.data || []);
         setPlatforms(platformRes?.data || []);
@@ -131,6 +161,10 @@ export default function Dashboard() {
     setSubmitting(true);
 
     try {
+      const createdAtISO = date
+        ? new Date(date + "T00:00:00Z").toISOString()
+        : new Date().toISOString();
+
       const newLead = await createLead({
         name,
         phone_number: phoneNumber,
@@ -139,9 +173,21 @@ export default function Dashboard() {
         nominal: Number(nominal),
         platform_id: platformId,
         user_id: user.id,
+        created_at: createdAtISO,
       });
 
-      setLeads((prev) => [newLead, ...prev]);
+      // Update local state with the new lead including created_at and relation names
+      const branchObj = branches.find((b) => b.id === branchId);
+      const platformObj = platforms.find((p) => p.id === platformId);
+
+      const enhancedLead: Lead = {
+        ...newLead,
+        created_at: newLead.created_at || createdAtISO,
+        branches: branchObj ? { name: branchObj.name } : newLead.branches,
+        platform: platformObj ? { name: platformObj.name } : newLead.platform,
+      };
+
+      setLeads((prev) => [enhancedLead, ...prev]);
 
       const selectedStatus = statuses.find((s) => s.id === statusId);
       if (selectedStatus?.name?.toLowerCase() === "closing") {
@@ -154,6 +200,7 @@ export default function Dashboard() {
         setAddress("");
         setNominal("");
         setPlatformId("");
+        setDate(new Date().toISOString().split("T")[0]);
       }
     } catch (error) {
       console.error(error);
@@ -172,7 +219,6 @@ export default function Dashboard() {
       await deleteLead(id);
     } catch (error) {
       setLeads(previousLeads);
-
       console.error(error);
       alert("Failed to delete lead");
     }
@@ -181,7 +227,7 @@ export default function Dashboard() {
   const handleUpdate = async (id: number, field: keyof Lead, value: any) => {
     const previous = leads;
 
-    // optimistic update
+    // Optimistic update
     setLeads((prev) =>
       prev.map((lead) =>
         lead.id === id
@@ -198,14 +244,39 @@ export default function Dashboard() {
         [field]: value,
       });
 
-      // sync with server response (IMPORTANT)
+      // Sync with server response
       setLeads((prev) =>
         prev.map((lead) => (lead.id === id ? { ...lead, ...updated } : lead)),
       );
     } catch (e) {
+      console.error("Update failed:", e);
       setLeads(previous);
     }
   };
+
+  // Filtered Leads
+  const filteredLeads = useMemo(() => {
+    return leads.filter((l) => {
+      let match = true;
+      if (filterBranch && l.branch_id !== filterBranch) match = false;
+      if (filterMonth && l.created_at) {
+        if (!l.created_at.startsWith(filterMonth)) match = false;
+      }
+      return match;
+    });
+  }, [leads, filterBranch, filterMonth]);
+
+  // Stats Calculations
+  const totalLeads = filteredLeads.length;
+  const totalOmset = filteredLeads.reduce(
+    (sum, l) => sum + (l.nominal || 0),
+    0,
+  );
+
+  const filteredLeadIds = new Set(filteredLeads.map((l) => String(l.id)));
+  const totalMargin = invoices
+    .filter((inv) => filteredLeadIds.has(String(inv.lead_id)))
+    .reduce((sum, inv) => sum + (inv.margin || 0), 0);
 
   if (loading) {
     return (
@@ -217,30 +288,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  // Filtered Leads
-  const filteredLeads = leads.filter((l) => {
-    let match = true;
-    if (filterBranch && l.branch_id !== filterBranch) match = false;
-    if (filterMonth && l.created_at) {
-      if (!l.created_at.startsWith(filterMonth)) match = false;
-    }
-    return match;
-  });
-
-  // Stats Calculations
-  const totalLeads = filteredLeads.length;
-  // Total Omset is now total nominal of all filtered leads (not just closing)
-  const totalOmset = filteredLeads.reduce(
-    (sum, l) => sum + (l.nominal || 0),
-    0,
-  );
-
-  // Total Margin: filter invoices based on filtered leads, then sum their margins
-  const filteredLeadIds = new Set(filteredLeads.map((l) => String(l.id)));
-  const totalMargin = invoices
-    .filter((inv) => filteredLeadIds.has(String(inv.lead_id)))
-    .reduce((sum, inv) => sum + (inv.margin || 0), 0);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-16">
@@ -332,7 +379,7 @@ export default function Dashboard() {
             </h3>
           </div>
           <span className="text-[10px] text-zinc-400 font-semibold uppercase">
-            Tab / Blur / Click to edit in-place
+            Kolom Date (created_at) dapat diedit langsung & update otomatis ke grafik
           </span>
         </div>
 
@@ -344,17 +391,19 @@ export default function Dashboard() {
             <table className="w-full border-collapse text-[.6rem]">
               <thead>
                 <tr className="bg-zinc-50 border-b border-zinc-300">
+                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[12%]">
+                    Date
+                  </th>
                   <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[14%]">
                     Name
                   </th>
-                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[14%]">
+                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[12%]">
                     Phone Number
                   </th>
-                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[14%]">
+                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[12%]">
                     Branch
                   </th>
-
-                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[14%]">
+                  <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[16%]">
                     Address
                   </th>
                   <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[12%]">
@@ -363,7 +412,7 @@ export default function Dashboard() {
                   <th className="border-r border-zinc-300 px-2 py-1.5 text-left font-semibold text-zinc-600 w-[12%]">
                     Platform
                   </th>
-                  <th className="px-2 py-1.5 text-center font-semibold text-zinc-600 w-[6%]">
+                  <th className="px-2 py-1.5 text-center font-semibold text-zinc-600 w-[10%]">
                     Action
                   </th>
                 </tr>
@@ -371,6 +420,15 @@ export default function Dashboard() {
               <tbody className="text-zinc-700">
                 {/* Input Row */}
                 <tr className="divide-x divide-zinc-300 bg-white">
+                  <td className="p-0">
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full h-8 px-2 outline-none bg-zinc-50/50"
+                    />
+                  </td>
+
                   <td className="p-0">
                     <input
                       type="text"
@@ -418,15 +476,15 @@ export default function Dashboard() {
 
                   <td className="p-0">
                     <input
-                      type="number"
-                      value={nominal}
-                      onChange={(e) =>
-                        setNominal(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
-                      }
-                      placeholder="Nominal"
-                      className="w-full h-8 px-2 outline-none"
+                      type="text"
+                      inputMode="numeric"
+                      value={formatMoneyDisplay(nominal)}
+                      onChange={(e) => {
+                        const raw = parseMoneyRaw(e.target.value);
+                        setNominal(e.target.value === "" ? "" : raw);
+                      }}
+                      placeholder="Nominal (contoh: 200.000.000)"
+                      className="w-full h-8 px-2 outline-none font-medium"
                     />
                   </td>
 
@@ -462,9 +520,26 @@ export default function Dashboard() {
                     key={lead.id}
                     className="divide-x divide-zinc-300 border-t border-zinc-300 bg-white hover:bg-zinc-50"
                   >
+                    {/* Editable Date Column */}
+                    <td className="p-0">
+                      <input
+                        type="date"
+                        defaultValue={toDateInputValue(lead.created_at)}
+                        className="w-full h-8 px-2 bg-transparent outline-none focus:bg-white"
+                        onChange={(e) => {
+                          const newDateStr = e.target.value;
+                          if (newDateStr) {
+                            const newISO = new Date(newDateStr + "T00:00:00Z").toISOString();
+                            handleUpdate(lead.id, "created_at", newISO);
+                          }
+                        }}
+                      />
+                    </td>
+
                     <td>
                       <input
                         defaultValue={lead.name}
+                        className="w-full h-8 px-2 bg-transparent outline-none focus:bg-white"
                         onBlur={(e) =>
                           handleUpdate(lead.id, "name", e.target.value)
                         }
@@ -474,6 +549,7 @@ export default function Dashboard() {
                     <td>
                       <input
                         defaultValue={lead.phone_number}
+                        className="w-full h-8 px-2 bg-transparent outline-none focus:bg-white"
                         onBlur={(e) =>
                           handleUpdate(lead.id, "phone_number", e.target.value)
                         }
@@ -524,6 +600,7 @@ export default function Dashboard() {
                     <td>
                       <input
                         defaultValue={lead.address}
+                        className="w-full h-8 px-2 bg-transparent outline-none focus:bg-white"
                         onBlur={(e) =>
                           handleUpdate(lead.id, "address", e.target.value)
                         }
@@ -532,15 +609,23 @@ export default function Dashboard() {
 
                     <td>
                       <input
-                        type="number"
-                        defaultValue={lead.nominal}
-                        onBlur={(e) =>
-                          handleUpdate(
-                            lead.id,
-                            "nominal",
-                            Number(e.target.value),
-                          )
-                        }
+                        type="text"
+                        inputMode="numeric"
+                        defaultValue={formatMoneyDisplay(lead.nominal)}
+                        key={`nominal-${lead.id}-${lead.nominal}`}
+                        className="w-full h-8 px-2 bg-transparent outline-none focus:bg-white font-medium"
+                        onFocus={(e) => {
+                          // Allow clean editing or keep formatted
+                          e.target.select();
+                        }}
+                        onChange={(e) => {
+                          const formatted = formatMoneyDisplay(e.target.value);
+                          e.target.value = formatted;
+                        }}
+                        onBlur={(e) => {
+                          const rawNumber = parseMoneyRaw(e.target.value);
+                          handleUpdate(lead.id, "nominal", rawNumber);
+                        }}
                       />
                     </td>
 

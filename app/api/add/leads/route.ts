@@ -15,6 +15,7 @@ export async function POST(req: Request) {
       nominal,
       platform_id,
       user_id,
+      created_at,
     } = body;
 
     if (
@@ -69,20 +70,23 @@ export async function POST(req: Request) {
     // =========================
     // Buat lead
     // =========================
+    const leadInsertPayload: any = {
+      customer_id: customerId,
+      name,
+      phone_number,
+      branch_id,
+      address,
+      nominal,
+      platform_id,
+      user_id,
+    };
+    if (created_at) {
+      leadInsertPayload.created_at = created_at;
+    }
+
     const { data, error } = await supabase
       .from("leads")
-      .insert([
-        {
-          customer_id: customerId,
-          name,
-          phone_number,
-          branch_id,
-          address,
-          nominal,
-          platform_id,
-          user_id,
-        },
-      ])
+      .insert([leadInsertPayload])
       .select(
         `
         id,
@@ -93,6 +97,7 @@ export async function POST(req: Request) {
         nominal,
         branch_id,
         platform_id,
+        created_at,
         branches(name),
         platform(name)
       `,
