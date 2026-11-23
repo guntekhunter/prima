@@ -13,6 +13,7 @@ import {
   BarChart3,
   X,
   Wallet,
+  LayoutDashboard,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -37,6 +38,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     { name: "Pengeluaran", href: "/pengeluaran", icon: FileText },
     { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
     { name: "Tambah Pengguna", href: "/register", icon: User },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   ]);
 
   useEffect(() => {
@@ -66,6 +68,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             { name: "Cash Advance", href: "/cash-advance", icon: Wallet },
             { name: "Laporan Keuangan", href: "/report", icon: BarChart3 },
             { name: "Tambah Pengguna", href: "/register", icon: User },
+            { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
           ]);
         } else {
           // Only Report for surveyor, branch PIC, etc.
